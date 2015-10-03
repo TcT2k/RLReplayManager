@@ -32,15 +32,15 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	m_replayListCtrl->AppendColumn(_("Description"));
 	m_replayListCtrl->AppendColumn(_("Arena"));
-	m_replayListCtrl->AppendColumn(_("Team Size"), wxLIST_FORMAT_RIGHT);
-	m_replayListCtrl->AppendColumn(_("Length"));
-	m_replayListCtrl->AppendColumn(_("Date"));
-	m_replayListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER);
+	m_replayListCtrl->AppendColumn(_("Team Size"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth());
+	m_replayListCtrl->AppendColumn(_("Length"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_replayListCtrl->AppendColumn(_("Date"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth());
+	m_replayListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
 
-	m_goalListCtrl->AppendColumn(_("Player"));
-	m_goalListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER);
-	m_goalListCtrl->AppendColumn(_("Team"), wxLIST_FORMAT_RIGHT);
-	m_goalListCtrl->AppendColumn(_("Time"));
+	m_goalListCtrl->AppendColumn(_("Player"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
+	m_goalListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_goalListCtrl->AppendColumn(_("Team"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth());
+	m_goalListCtrl->AppendColumn(_("Time"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
 
 	wxFileName basePath(wxStandardPaths::Get().GetDocumentsDir(), "");
 	basePath.AppendDir("My Games");
