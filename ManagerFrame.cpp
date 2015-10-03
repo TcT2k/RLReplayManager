@@ -31,6 +31,7 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	wxPersistentRegisterAndRestore(this);
 
 	m_replayListCtrl->AppendColumn(_("Description"));
+	m_replayListCtrl->AppendColumn(_("Arena"));
 	m_replayListCtrl->AppendColumn(_("Team Size"), wxLIST_FORMAT_RIGHT);
 	m_replayListCtrl->AppendColumn(_("Length"), wxLIST_FORMAT_RIGHT);
 	m_replayListCtrl->AppendColumn(_("Date"));
@@ -58,17 +59,18 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 		int id = m_replayListCtrl->InsertItem(m_replays.size(), ri->GetDescription(), 0);
 
-		m_replayListCtrl->SetItem(id, 1, wxString::Format("%d", (*ri)["TeamSize"].As<wxUint32>()));
-		m_replayListCtrl->SetItem(id, 2, wxString::Format("%d", (*ri)["NumFrames"].As<wxUint32>()));
+		m_replayListCtrl->SetItem(id, 1, (*ri)["MapName"].As<wxString>());
+		m_replayListCtrl->SetItem(id, 2, wxString::Format("%d", (*ri)["TeamSize"].As<wxUint32>()));
+		m_replayListCtrl->SetItem(id, 3, wxString::Format("%d", (*ri)["NumFrames"].As<wxUint32>()));
 		if (ri->GetDate().IsValid())
-			m_replayListCtrl->SetItem(id, 3, ri->GetDate().Format());
+			m_replayListCtrl->SetItem(id, 4, ri->GetDate().Format());
 		int team0score = 0;
 		int team1score = 0;
 		if (ri->find("Team0Score") != ri->end())
 			team0score = (*ri)["Team0Score"].As<wxUint32>();
 		if (ri->find("Team1Score") != ri->end())
 			team1score = (*ri)["Team1Score"].As<wxUint32>();
-		m_replayListCtrl->SetItem(id, 4,
+		m_replayListCtrl->SetItem(id, 5,
 			wxString::Format("%d:%d", team0score, team1score));
 
 		m_replays.push_back(ri);
