@@ -151,6 +151,23 @@ void Replay::Load(const wxString& filename)
 	m_description = (*this)["Id"].As<wxString>();
 
 	m_date.ParseFormat((*this)["Date"].As<wxString>(), wxS("%Y-%m-%d:%H-%M"));
+
+	m_fps = (*this)["RecordFPS"].As<wxFloat32>();
+	m_length = ConvertFrames((*this)["NumFrames"].As<wxUint32>());
+}
+
+wxDateTime Replay::ConvertFrames(wxUint32 frames) const
+{
+	wxDouble seconds = frames / m_fps;
+	wxUint32 minutes = seconds / 60;
+	wxUint32 hours = 0;
+	if (minutes > 60)
+	{
+		hours = minutes / 60;
+		minutes %= 60;
+	}
+
+	return wxDateTime(hours, minutes, (int)seconds % 60, 0);
 }
 
 wxString Replay::GetExportBaseName()

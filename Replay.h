@@ -46,7 +46,12 @@ public:
 	const wxDateTime& GetDate() const
 		{ return m_date; }
 
+	const wxDateTime& GetLength() const
+		{ return m_length; }
+
 	wxString GetExportFileName();
+
+	wxDateTime ConvertFrames(wxUint32 frames) const;
 
 	void Export(const wxString& filename);
 
@@ -54,6 +59,8 @@ private:
 	wxString m_filename;
 	wxString m_description;
 	wxDateTime m_date;
+	wxDateTime m_length;
+	wxDouble m_fps;
 
 	wxString GetExportBaseName();
 };

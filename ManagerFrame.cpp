@@ -33,13 +33,14 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_replayListCtrl->AppendColumn(_("Description"));
 	m_replayListCtrl->AppendColumn(_("Arena"));
 	m_replayListCtrl->AppendColumn(_("Team Size"), wxLIST_FORMAT_RIGHT);
-	m_replayListCtrl->AppendColumn(_("Length"), wxLIST_FORMAT_RIGHT);
+	m_replayListCtrl->AppendColumn(_("Length"));
 	m_replayListCtrl->AppendColumn(_("Date"));
 	m_replayListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER);
 
 	m_goalListCtrl->AppendColumn(_("Player"));
 	m_goalListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER);
 	m_goalListCtrl->AppendColumn(_("Team"), wxLIST_FORMAT_RIGHT);
+	m_goalListCtrl->AppendColumn(_("Time"));
 
 	wxFileName basePath(wxStandardPaths::Get().GetDocumentsDir(), "");
 	basePath.AppendDir("My Games");
@@ -61,7 +62,7 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 		m_replayListCtrl->SetItem(id, 1, (*ri)["MapName"].As<wxString>());
 		m_replayListCtrl->SetItem(id, 2, wxString::Format("%d", (*ri)["TeamSize"].As<wxUint32>()));
-		m_replayListCtrl->SetItem(id, 3, wxString::Format("%d", (*ri)["NumFrames"].As<wxUint32>()));
+		m_replayListCtrl->SetItem(id, 3, ri->GetLength().Format("%M:%S") );
 		if (ri->GetDate().IsValid())
 			m_replayListCtrl->SetItem(id, 4, ri->GetDate().Format());
 		int team0score = 0;
@@ -155,6 +156,7 @@ void ManagerFrame::OnReplaySelected( wxListEvent& event )
 
 		m_goalListCtrl->SetItem(id, 1, wxString::Format("%d:%d", score1, score2));
 		m_goalListCtrl->SetItem(id, 2, wxString::Format("%d", playerTeam + 1));
+		m_goalListCtrl->SetItem(id, 3, (*m_replays[sel]).ConvertFrames((*goal)["frame"].As<wxUint32>()).Format("%M:%S"));
 
 		itemId++;
 	}
