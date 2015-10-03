@@ -36,27 +36,22 @@ void ReplayProperties::Load(wxInputStream& istr)
 			break;
 
 		wxString propertyType = ReadString(istr);
+		wxUint64 propertySize;
+		istr.Read(&propertySize, sizeof(propertySize));
 
 		if (propertyType.IsSameAs("IntProperty"))
 		{
-			wxUint64 int1;
-			istr.Read(&int1, sizeof(int1));
-			wxUint32 int2;
-			istr.Read(&int2, sizeof(int2));
-			(*this)[propertyName] = int2;
+			wxUint32 value;
+			istr.Read(&value, sizeof(value));
+			(*this)[propertyName] = value;
 		}
 		else if (propertyType.IsSameAs("StrProperty")
 			|| propertyType.IsSameAs("NameProperty"))
 		{
-			wxUint64 int1;
-			istr.Read(&int1, sizeof(int1));
 			(*this)[propertyName] = ReadString(istr);
 		}
 		else if (propertyType.IsSameAs("FloatProperty"))
 		{
-			wxUint64 int1;
-			istr.Read(&int1, sizeof(int1));
-
 			wxFloat32 value;
 			istr.Read(&value, sizeof(value));
 
@@ -64,8 +59,6 @@ void ReplayProperties::Load(wxInputStream& istr)
 		}
 		else if (propertyType.IsSameAs("ArrayProperty"))
 		{
-			wxUint64 int1;
-			istr.Read(&int1, sizeof(int1));
 			wxUint32 entryCount;
 			istr.Read(&entryCount, sizeof(entryCount));
 
@@ -91,17 +84,31 @@ void ReplayProperties::Load(wxInputStream& istr)
 
 wxString ReplayProperties::ReadString(wxInputStream& istr)
 {
-	wxUint32 len;
+	wxInt32 len;
 	istr.Read(&len, sizeof(len));
 	if (len == 0)
 		return wxString();
 
-	wxCharBuffer chBuf(len - 1);
+	if (len < 0)
+	{
+		// Unicode string
+		len = abs(len);
+		wxWCharBuffer chBuf(len - 1);
 
-	istr.Read(chBuf.data(), len - 1);
-	istr.SeekI(1, wxFromCurrent); // Skip trailing zero
+		istr.Read(chBuf.data(), (len - 1) * 2);
+		istr.SeekI(2, wxFromCurrent); // Skip trailing zero
 
-	return chBuf;
+		return chBuf;
+	}
+	else
+	{
+		wxCharBuffer chBuf(len - 1);
+
+		istr.Read(chBuf.data(), len - 1);
+		istr.SeekI(1, wxFromCurrent); // Skip trailing zero
+
+		return chBuf;
+	}
 }
 
 //
