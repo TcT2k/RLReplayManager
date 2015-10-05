@@ -49,6 +49,12 @@ public:
 	const wxDateTime& GetLength() const
 		{ return m_length; }
 
+	const wxString& GetFileName() const
+		{ return m_filename; }
+
+	void SetFileName(const wxString& filename)
+		{ m_filename = filename; }
+
 	wxString GetExportFileName();
 
 	wxDateTime ConvertFrames(wxUint32 frames) const;

@@ -11,6 +11,8 @@
 #include "RLRMFrames.h"
 #include "Replay.h"
 
+#include <wx/fswatcher.h>
+
 class ManagerFrame : public BaseManagerFrame
 {
 public:
@@ -21,8 +23,11 @@ protected:
 	void OnAboutClicked(wxCommandEvent& event);
 	void OnReplaySelectionChanged(wxDataViewEvent& event);
 
+	void OnFileSystemChange(wxFileSystemWatcherEvent& event);
+
 private:
 	wxVector<Replay::Ptr> m_replays;
+	wxFileSystemWatcher m_fsWatcher;
 
 	friend class ReplayDataModel;
 };

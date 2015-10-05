@@ -147,6 +147,9 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_replayDV->UnselectAll();
 	m_replayDV->AssociateModel(model.get());
 	m_replayDV->Refresh();
+
+	m_fsWatcher.Bind(wxEVT_FSWATCHER, &ManagerFrame::OnFileSystemChange, this);
+	m_fsWatcher.Add(basePath.GetFullPath(), wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME);
 }
 
 void ManagerFrame::OnQuitClicked( wxCommandEvent& event )
@@ -192,6 +195,54 @@ void ManagerFrame::OnExportClicked(wxCommandEvent& event)
 			wxLaunchDefaultApplication(fn.GetPath());
 		}
 	}
+}
+
+void ManagerFrame::OnFileSystemChange(wxFileSystemWatcherEvent& event)
+{
+	wxLogDebug(event.ToString());
+	if (!event.GetPath().GetExt().IsSameAs("replay", false))
+		return;
+
+	if (event.GetChangeType() & wxFSW_EVENT_CREATE)
+	{
+		// Add new file
+		Replay::Ptr ri(new Replay(event.GetPath().GetFullPath()));
+		m_replays.push_back(ri);
+
+		static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowAppended();
+	}
+	else if (event.GetChangeType() & wxFSW_EVENT_DELETE)
+	{
+		// Find replay and remove it
+		size_t index = 0;
+		wxString changePath = event.GetPath().GetFullPath();
+
+		for (auto replay = m_replays.begin(); replay != m_replays.end(); ++replay, ++index)
+		{
+			if ((*replay)->GetFileName().IsSameAs(changePath, false))
+			{
+				m_replays.erase(replay);
+				static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowDeleted(index);
+				break;
+			}
+		}
+	}
+	else if (event.GetChangeType() & wxFSW_EVENT_RENAME)
+	{
+		wxString changePath = event.GetPath().GetFullPath();
+
+		// Find replay and update filename
+		for (auto replay = m_replays.begin(); replay != m_replays.end(); ++replay)
+		{
+			if ((*replay)->GetFileName().IsSameAs(changePath, false))
+			{
+				(*replay)->SetFileName(event.GetNewPath().GetFullPath());
+				break;
+			}
+		}
+	}
+
+	event.Skip();
 }
 
 void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
