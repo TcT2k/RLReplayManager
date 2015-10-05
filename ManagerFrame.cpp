@@ -112,12 +112,12 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	wxPersistentRegisterAndRestore(this);
 
-	m_replayDV->AppendTextColumn(_("Description"), RCIDescription);
-	m_replayDV->AppendTextColumn(_("Arena"), RCIArena);
+	m_replayDV->AppendTextColumn(_("Arena"), RCIArena, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
 	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT);
+	m_replayDV->AppendTextColumn(_("Score"), RCIScore, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth(), wxALIGN_CENTER);
 	m_replayDV->AppendTextColumn(_("Length"), RCILength, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
 	m_replayDV->AppendTextColumn(_("Date"), RCIDate, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth());
-	m_replayDV->AppendTextColumn(_("Score"), RCIScore, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth(), wxALIGN_CENTER);
+	m_replayDV->AppendTextColumn(_("Description"), RCIDescription);
 
 	m_goalListCtrl->AppendColumn(_("Player"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
 	m_goalListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
