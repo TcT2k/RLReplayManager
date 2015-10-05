@@ -20,9 +20,10 @@
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
-#include <wx/listctrl.h>
+#include <wx/dataview.h>
 #include <wx/sizer.h>
 #include <wx/panel.h>
+#include <wx/listctrl.h>
 #include <wx/splitter.h>
 #include <wx/frame.h>
 
@@ -43,7 +44,7 @@ class BaseManagerFrame : public wxFrame
 		wxMenu* help;
 		wxSplitterWindow* m_splitter;
 		wxPanel* m_panel1;
-		wxListCtrl* m_replayListCtrl;
+		wxDataViewCtrl* m_replayDV;
 		wxPanel* m_panel2;
 		wxListCtrl* m_goalListCtrl;
 		
@@ -51,7 +52,7 @@ class BaseManagerFrame : public wxFrame
 		virtual void OnExportClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnQuitClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnAboutClicked( wxCommandEvent& event ) { event.Skip(); }
-		virtual void OnReplaySelected( wxListEvent& event ) { event.Skip(); }
+		virtual void OnReplaySelectionChanged( wxDataViewEvent& event ) { event.Skip(); }
 		
 	
 	public:

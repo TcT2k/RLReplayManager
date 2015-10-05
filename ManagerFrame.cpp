@@ -19,6 +19,88 @@
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
 
+enum ReplayColumnIndex
+{
+	RCIDescription,
+	RCIArena,
+	RCITeamSize,
+	RCILength,
+	RCIDate,
+	RCIScore,
+
+	RCIMax
+};
+
+//
+// ReplayDataModel
+//
+
+class ReplayDataModel : public wxDataViewVirtualListModel
+{
+public:
+	ReplayDataModel(ManagerFrame* frame) :
+		wxDataViewVirtualListModel(frame->m_replays.size()),
+		m_frame(frame)
+	{
+
+	}
+
+	virtual unsigned int GetColumnCount() const
+	{
+		return RCIMax;
+	}
+
+	// return type as reported by wxVariant
+	virtual wxString GetColumnType(unsigned int col) const
+	{
+		return wxString();
+	}
+
+	void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
+	{
+		Replay::Ptr ri = m_frame->m_replays[row];
+
+		switch (col)
+		{
+			case RCIDescription:
+				variant = ri->GetDescription();
+				break;
+			case RCIArena:
+				variant = (*ri)["MapName"].As<wxString>();
+				break;
+			case RCITeamSize:
+				variant = wxString::Format("%d", (*ri)["TeamSize"].As<wxUint32>());
+				break;
+			case RCILength:
+				variant = ri->GetLength().Format("%M:%S");
+				break;
+			case RCIDate:
+				variant = ri->GetDate().Format();
+				break;
+			case RCIScore:
+			{
+				int team0score = 0;
+				int team1score = 0;
+				if (ri->find("Team0Score") != ri->end())
+					team0score = (*ri)["Team0Score"].As<wxUint32>();
+				if (ri->find("Team1Score") != ri->end())
+					team1score = (*ri)["Team1Score"].As<wxUint32>();
+				variant = wxString::Format("%d:%d", team0score, team1score);
+				break;
+			}
+		}
+	}
+
+	bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
+	{
+		return false;
+	}
+
+private:
+	ManagerFrame* m_frame;
+};
+
+
 //
 // ManagerFrame
 //
@@ -30,12 +112,12 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	wxPersistentRegisterAndRestore(this);
 
-	m_replayListCtrl->AppendColumn(_("Description"));
-	m_replayListCtrl->AppendColumn(_("Arena"));
-	m_replayListCtrl->AppendColumn(_("Team Size"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth());
-	m_replayListCtrl->AppendColumn(_("Length"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
-	m_replayListCtrl->AppendColumn(_("Date"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth());
-	m_replayListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_replayDV->AppendTextColumn(_("Description"), RCIDescription);
+	m_replayDV->AppendTextColumn(_("Arena"), RCIArena);
+	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT);
+	m_replayDV->AppendTextColumn(_("Length"), RCILength, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_replayDV->AppendDateColumn(_("Date"), RCIDate, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth());
+	m_replayDV->AppendTextColumn(_("Score"), RCIScore, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth(), wxALIGN_CENTER);
 
 	m_goalListCtrl->AppendColumn(_("Player"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
 	m_goalListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
@@ -58,24 +140,13 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	{
 		Replay::Ptr ri(new Replay(*filename));
 
-		int id = m_replayListCtrl->InsertItem(m_replays.size(), ri->GetDescription(), 0);
-
-		m_replayListCtrl->SetItem(id, 1, (*ri)["MapName"].As<wxString>());
-		m_replayListCtrl->SetItem(id, 2, wxString::Format("%d", (*ri)["TeamSize"].As<wxUint32>()));
-		m_replayListCtrl->SetItem(id, 3, ri->GetLength().Format("%M:%S") );
-		if (ri->GetDate().IsValid())
-			m_replayListCtrl->SetItem(id, 4, ri->GetDate().Format());
-		int team0score = 0;
-		int team1score = 0;
-		if (ri->find("Team0Score") != ri->end())
-			team0score = (*ri)["Team0Score"].As<wxUint32>();
-		if (ri->find("Team1Score") != ri->end())
-			team1score = (*ri)["Team1Score"].As<wxUint32>();
-		m_replayListCtrl->SetItem(id, 5,
-			wxString::Format("%d:%d", team0score, team1score));
-
 		m_replays.push_back(ri);
 	}
+
+	wxObjectDataPtr<ReplayDataModel> model(new ReplayDataModel(this));
+	m_replayDV->UnselectAll();
+	m_replayDV->AssociateModel(model.get());
+	m_replayDV->Refresh();
 }
 
 void ManagerFrame::OnQuitClicked( wxCommandEvent& event )
@@ -97,8 +168,7 @@ void ManagerFrame::OnAboutClicked(wxCommandEvent& event)
 
 void ManagerFrame::OnExportClicked(wxCommandEvent& event)
 {
-	long sel = m_replayListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL,
-		wxLIST_STATE_SELECTED);
+	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
 	Replay::Ptr replay = m_replays[sel];
 
 	wxFileDialog fdlg(
@@ -124,18 +194,17 @@ void ManagerFrame::OnExportClicked(wxCommandEvent& event)
 	}
 }
 
-void ManagerFrame::OnReplaySelected( wxListEvent& event )
+void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 {
 	m_goalListCtrl->DeleteAllItems();
 
-	if (m_replayListCtrl->GetSelectedItemCount() != 1)
+	if (m_replayDV->GetSelectedItemsCount() != 1)
 	{
 		m_menubar->Enable(ID_EXPORT, false);
 		return;
 	}
 
-	long sel = m_replayListCtrl->GetNextItem(-1, wxLIST_NEXT_ALL,
-		wxLIST_STATE_SELECTED);
+	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
 	m_menubar->Enable(ID_EXPORT, true);
 
 	ReplayProperties::List goals = (*m_replays[sel])["Goals"].As<ReplayProperties::List>();

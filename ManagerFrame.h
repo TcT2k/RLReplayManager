@@ -19,10 +19,12 @@ protected:
 	void OnQuitClicked(wxCommandEvent& event);
 	void OnExportClicked(wxCommandEvent& event);
 	void OnAboutClicked(wxCommandEvent& event);
-	void OnReplaySelected(wxListEvent& event);
+	void OnReplaySelectionChanged(wxDataViewEvent& event);
 
 private:
 	wxVector<Replay::Ptr> m_replays;
+
+	friend class ReplayDataModel;
 };
 
 #endif // __ManagerFrame__
