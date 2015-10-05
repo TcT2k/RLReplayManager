@@ -7,6 +7,7 @@
 */
 
 #include <wx/wx.h>
+#include <wx/intl.h>
 
 #include "ManagerFrame.h"
 
@@ -19,6 +20,8 @@ public:
 		wxImage::AddHandler(new wxJPEGHandler());
 		wxImage::AddHandler(new wxGIFHandler());
 
+		m_locale.Init();
+
 		SetAppName("RLReplayManager");
 		SetAppDisplayName("RLReplayManager");
 
@@ -27,6 +30,9 @@ public:
 
 		return true;
 	}
+
+private:
+	wxLocale m_locale;
 };
 
 wxIMPLEMENT_APP(ReplayManagerApp);
