@@ -55,6 +55,8 @@ public:
 	void SetFileName(const wxString& filename)
 		{ m_filename = filename; }
 
+	wxString GetMapDisplayName();
+
 	wxString GetExportFileName();
 
 	wxDateTime ConvertFrames(wxUint32 frames) const;
@@ -67,6 +69,8 @@ private:
 	wxDateTime m_date;
 	wxDateTime m_length;
 	wxDouble m_fps;
+	
+	static std::map<wxString, wxString> ms_mapNames;
 
 	wxString GetExportBaseName();
 };

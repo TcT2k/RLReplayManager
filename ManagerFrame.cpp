@@ -66,7 +66,7 @@ public:
 				variant = ri->GetDescription();
 				break;
 			case RCIArena:
-				variant = (*ri)["MapName"].As<wxString>();
+				variant = ri->GetMapDisplayName();
 				break;
 			case RCITeamSize:
 				variant = wxString::Format("%d", (*ri)["TeamSize"].As<wxUint32>());

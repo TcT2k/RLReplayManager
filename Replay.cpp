@@ -13,6 +13,8 @@
 #include <wx/filename.h>
 #include <wx/wfstream.h>
 #include <wx/zipstrm.h>
+#include <wx/fileconf.h>
+#include <wx/stdpaths.h>
 
 //
 // ReplayProperties
@@ -114,6 +116,8 @@ wxString ReplayProperties::ReadString(wxInputStream& istr)
 //
 // Replay
 //
+std::map<wxString, wxString> Replay::ms_mapNames;
+
 Replay::Replay(const wxString& filename)
 {
 	Load(filename);
@@ -210,4 +214,30 @@ void Replay::Export(const wxString& filename)
 	istr.Read(zipstr);
 	
 	zipstr.CloseEntry();
+}
+
+wxString Replay::GetMapDisplayName()
+{
+	wxString mapId = (*this)["MapName"].As<wxString>();
+
+	if (ms_mapNames.empty())
+	{
+		wxFileName cfgName(wxStandardPaths::Get().GetResourcesDir(), "RLReplayManager.cfg");
+		wxFileConfig cfg(wxEmptyString, wxEmptyString, wxEmptyString, cfgName.GetFullPath());
+		cfg.SetPath("/MapNames");
+		wxString entry;
+		long entryIndex = 0;
+		bool moreEntries = cfg.GetFirstEntry(entry, entryIndex);
+		while (moreEntries)
+		{
+			ms_mapNames[entry] = cfg.Read(entry);
+			moreEntries = cfg.GetNextEntry(entry, entryIndex);
+		}
+	}
+
+	auto mapDesc = ms_mapNames.find(mapId.Lower());
+	if (mapDesc != ms_mapNames.end())
+		return mapDesc->second;
+	else
+		return mapId;
 }
