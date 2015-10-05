@@ -25,11 +25,14 @@
 #include <wx/panel.h>
 #include <wx/listctrl.h>
 #include <wx/splitter.h>
+#include <wx/statusbr.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
 #define ID_EXPORT 1000
+#define ID_UPLOAD 1001
+#define ID_AUTO_UPLOAD 1002
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class BaseManagerFrame
@@ -47,12 +50,17 @@ class BaseManagerFrame : public wxFrame
 		wxDataViewCtrl* m_replayDV;
 		wxPanel* m_panel2;
 		wxListCtrl* m_goalListCtrl;
+		wxStatusBar* m_statusBar;
 		
 		// Virtual event handlers, overide them in your derived class
+		virtual void OnFrameClose( wxCloseEvent& event ) { event.Skip(); }
 		virtual void OnExportClicked( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnUploadClicked( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnAutoUploadClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnQuitClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnAboutClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnReplaySelectionChanged( wxDataViewEvent& event ) { event.Skip(); }
+		virtual void OnStatusBarDoubleClicked( wxMouseEvent& event ) { event.Skip(); }
 		
 	
 	public:

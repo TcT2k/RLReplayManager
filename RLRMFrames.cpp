@@ -20,6 +20,17 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	file->Append( exportItem );
 	exportItem->Enable( false );
 	
+	wxMenuItem* upload;
+	upload = new wxMenuItem( file, ID_UPLOAD, wxString( _("&Upload...") ) + wxT('\t') + wxT("Ctrl+U"), wxEmptyString, wxITEM_NORMAL );
+	file->Append( upload );
+	upload->Enable( false );
+	
+	file->AppendSeparator();
+	
+	wxMenuItem* autoUpload;
+	autoUpload = new wxMenuItem( file, ID_AUTO_UPLOAD, wxString( _("&Auto Upload") ) , wxEmptyString, wxITEM_CHECK );
+	file->Append( autoUpload );
+	
 	file->AppendSeparator();
 	
 	wxMenuItem* quit;
@@ -71,22 +82,31 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	
 	this->SetSizer( bSizer1 );
 	this->Layout();
+	m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
 	
 	this->Centre( wxBOTH );
 	
 	// Connect Events
+	this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( BaseManagerFrame::OnFrameClose ) );
 	this->Connect( exportItem->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnExportClicked ) );
+	this->Connect( upload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnUploadClicked ) );
+	this->Connect( autoUpload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
 	this->Connect( quit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnQuitClicked ) );
 	this->Connect( about->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAboutClicked ) );
 	this->Connect( wxID_ANY, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnReplaySelectionChanged ) );
+	m_statusBar->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( BaseManagerFrame::OnStatusBarDoubleClicked ), NULL, this );
 }
 
 BaseManagerFrame::~BaseManagerFrame()
 {
 	// Disconnect Events
+	this->Disconnect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( BaseManagerFrame::OnFrameClose ) );
 	this->Disconnect( ID_EXPORT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnExportClicked ) );
+	this->Disconnect( ID_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnUploadClicked ) );
+	this->Disconnect( ID_AUTO_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
 	this->Disconnect( wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnQuitClicked ) );
 	this->Disconnect( wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAboutClicked ) );
 	this->Disconnect( wxID_ANY, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnReplaySelectionChanged ) );
+	m_statusBar->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( BaseManagerFrame::OnStatusBarDoubleClicked ), NULL, this );
 	
 }

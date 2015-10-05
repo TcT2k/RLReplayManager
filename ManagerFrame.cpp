@@ -18,6 +18,7 @@
 #include <wx/aboutdlg.h>
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
+#include <wx/config.h>
 
 enum ReplayColumnIndex
 {
@@ -150,6 +151,71 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	m_fsWatcher.Bind(wxEVT_FSWATCHER, &ManagerFrame::OnFileSystemChange, this);
 	m_fsWatcher.Add(basePath.GetFullPath(), wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME);
+
+	m_menubar->Check(ID_AUTO_UPLOAD, wxConfig::Get()->ReadBool("AutoUpload", false));
+}
+
+void ManagerFrame::AddUpload(Replay::Ptr replay)
+{
+	m_uploadQueue.push(replay);
+
+	wxLogDebug("%d entries in upload queue", m_uploadQueue.size());
+
+	if (GetThread() == NULL ||
+		!GetThread()->IsRunning())
+	{
+		if (CreateThread(wxTHREAD_JOINABLE) != wxTHREAD_NO_ERROR)
+		{
+			wxLogError("Could not create the worker thread!");
+			return;
+		}
+
+		if (GetThread()->Run() != wxTHREAD_NO_ERROR)
+		{
+			wxLogError("Could not run the worker thread!");
+			return;
+		}
+	}
+}
+
+void ManagerFrame::UpdateStatus(const wxString& statusText)
+{
+	m_statusBar->SetStatusText(statusText);
+}
+
+void* ManagerFrame::Entry()
+{
+	while (!m_uploadQueue.empty())
+	{
+		Replay::Ptr replay = m_uploadQueue.front();
+		m_uploadQueue.pop();
+
+		CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploading %s..."), replay->GetDescription()));
+
+		wxMilliSleep(500);
+
+		CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
+		wxMilliSleep(500);
+	}
+
+	CallAfter(&ManagerFrame::UpdateStatus, _("All uploads complete"));
+
+	return (void*)0;
+}
+
+void ManagerFrame::OnFrameClose(wxCloseEvent& event)
+{
+	if (event.CanVeto() && wxConfig::Get()->ReadBool("AutoUpload", false))
+	{
+		if (wxMessageBox(_("New replays will not be automatically uploaded if you quit.\n\nAre you sure you want to quit?"), 
+			_("Warning"), wxICON_WARNING | wxYES_NO | wxNO_DEFAULT | wxCENTER, this) != wxYES)
+		{
+			event.Veto();
+			return;
+		}
+	}
+
+	event.Skip();
 }
 
 void ManagerFrame::OnQuitClicked( wxCommandEvent& event )
@@ -197,6 +263,21 @@ void ManagerFrame::OnExportClicked(wxCommandEvent& event)
 	}
 }
 
+void ManagerFrame::OnUploadClicked(wxCommandEvent& event)
+{
+	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
+	Replay::Ptr replay = m_replays[sel];
+
+	AddUpload(replay);
+}
+
+void ManagerFrame::OnAutoUploadClicked(wxCommandEvent& event)
+{
+	wxConfig::Get()->Write("AutoUpload", m_menubar->IsChecked(ID_AUTO_UPLOAD));
+
+	event.Skip();
+}
+
 void ManagerFrame::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 {
 	wxLogDebug(event.ToString());
@@ -210,6 +291,9 @@ void ManagerFrame::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 		m_replays.push_back(ri);
 
 		static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowAppended();
+
+		if (wxConfig::Get()->ReadBool("AutoUpload", false))
+			AddUpload(ri);
 	}
 	else if (event.GetChangeType() & wxFSW_EVENT_DELETE)
 	{
@@ -248,6 +332,8 @@ void ManagerFrame::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 {
 	m_goalListCtrl->DeleteAllItems();
+
+	m_menubar->Enable(ID_UPLOAD, m_replayDV->GetSelectedItemsCount() > 0);
 
 	if (m_replayDV->GetSelectedItemsCount() != 1)
 	{
