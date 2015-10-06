@@ -233,6 +233,10 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	basePath.AppendDir("TAGame");
 	basePath.AppendDir("Demos");
 
+	// Prepare various UI elements
+	m_menubar->Check(ID_AUTO_UPLOAD, wxConfig::Get()->ReadBool("AutoUpload", false));
+	m_toolBar->EnableTool(ID_EXPORT, false);
+
 	ReplayProvider::Ptr activeReplays(new ReplayProvider(&m_replayProvider, basePath.GetFullPath(), "Active Game Replays"));
 	m_replayProvider.provider.push_back(activeReplays);
 	if (activeReplays->replay.empty())
@@ -244,7 +248,6 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	wxObjectDataPtr<ProviderDataModel> provModel(new ProviderDataModel(&m_replayProvider));
 	m_providerDV->AssociateModel(provModel.get());
 
-	m_menubar->Check(ID_AUTO_UPLOAD, wxConfig::Get()->ReadBool("AutoUpload", false));
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
@@ -406,11 +409,13 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 	if (m_replayDV->GetSelectedItemsCount() != 1)
 	{
 		m_menubar->Enable(ID_EXPORT, false);
+		m_toolBar->EnableTool(ID_EXPORT, false);
 		return;
 	}
 
 	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
 	m_menubar->Enable(ID_EXPORT, true);
+	m_toolBar->EnableTool(ID_EXPORT, true);
 
 	ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
 
@@ -436,4 +441,9 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 
 		itemId++;
 	}
+}
+
+void ManagerFrame::OnNewCategoryClicked(wxCommandEvent& event)
+{
+
 }

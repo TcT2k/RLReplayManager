@@ -15,6 +15,12 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	
 	m_menubar = new wxMenuBar( 0 );
 	file = new wxMenu();
+	wxMenuItem* newCategory;
+	newCategory = new wxMenuItem( file, ID_NEW_CATEGORY, wxString( _("&New Category") ) + wxT('\t') + wxT("Ctrl+N"), wxEmptyString, wxITEM_NORMAL );
+	file->Append( newCategory );
+	
+	file->AppendSeparator();
+	
 	wxMenuItem* exportItem;
 	exportItem = new wxMenuItem( file, ID_EXPORT, wxString( _("&Export...") ) + wxT('\t') + wxT("Ctrl+E"), wxEmptyString, wxITEM_NORMAL );
 	file->Append( exportItem );
@@ -110,11 +116,21 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	this->SetSizer( bSizer1 );
 	this->Layout();
 	m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
+	m_toolBar = this->CreateToolBar( wxTB_HORIZONTAL|wxTB_HORZ_TEXT|wxTB_NODIVIDER, wxID_ANY ); 
+	m_newCategoryTool = m_toolBar->AddTool( wxID_ANY, _("New Category"), wxArtProvider::GetBitmap( wxART_NEW_DIR, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL ); 
+	
+	m_toolBar->AddSeparator(); 
+	
+	m_exportTool = m_toolBar->AddTool( ID_EXPORT, _("Export"), wxArtProvider::GetBitmap( wxART_FILE_SAVE_AS, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL ); 
+	
+	m_toolBar->Realize(); 
+	
 	
 	this->Centre( wxBOTH );
 	
 	// Connect Events
 	this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( BaseManagerFrame::OnFrameClose ) );
+	this->Connect( newCategory->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnNewCategoryClicked ) );
 	this->Connect( exportItem->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnExportClicked ) );
 	this->Connect( upload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnUploadClicked ) );
 	this->Connect( autoUpload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
@@ -130,6 +146,7 @@ BaseManagerFrame::~BaseManagerFrame()
 {
 	// Disconnect Events
 	this->Disconnect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( BaseManagerFrame::OnFrameClose ) );
+	this->Disconnect( ID_NEW_CATEGORY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnNewCategoryClicked ) );
 	this->Disconnect( ID_EXPORT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnExportClicked ) );
 	this->Disconnect( ID_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnUploadClicked ) );
 	this->Disconnect( ID_AUTO_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );

@@ -26,15 +26,17 @@
 #include <wx/listctrl.h>
 #include <wx/splitter.h>
 #include <wx/statusbr.h>
+#include <wx/toolbar.h>
 #include <wx/frame.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define ID_EXPORT 1000
-#define ID_UPLOAD 1001
-#define ID_AUTO_UPLOAD 1002
-#define ID_PROVIDER_DV 1003
-#define ID_REPLAY_DV 1004
+#define ID_NEW_CATEGORY 1000
+#define ID_EXPORT 1001
+#define ID_UPLOAD 1002
+#define ID_AUTO_UPLOAD 1003
+#define ID_PROVIDER_DV 1004
+#define ID_REPLAY_DV 1005
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class BaseManagerFrame
@@ -57,9 +59,13 @@ class BaseManagerFrame : public wxFrame
 		wxPanel* m_goalPanel;
 		wxListCtrl* m_goalListCtrl;
 		wxStatusBar* m_statusBar;
+		wxToolBar* m_toolBar;
+		wxToolBarToolBase* m_newCategoryTool; 
+		wxToolBarToolBase* m_exportTool; 
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnFrameClose( wxCloseEvent& event ) { event.Skip(); }
+		virtual void OnNewCategoryClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnExportClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnUploadClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnAutoUploadClicked( wxCommandEvent& event ) { event.Skip(); }

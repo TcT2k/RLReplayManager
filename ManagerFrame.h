@@ -30,6 +30,7 @@ protected:
 	void OnReplaySelectionChanged(wxDataViewEvent& event);
 	void OnProviderSelectionChanged(wxDataViewEvent& event);
 	void OnProviderSizeChanged(wxSizeEvent& event);
+	void OnNewCategoryClicked(wxCommandEvent& event);
 
 	void* Entry();
 
