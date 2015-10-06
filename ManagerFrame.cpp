@@ -236,6 +236,7 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	// Prepare various UI elements
 	m_menubar->Check(ID_AUTO_UPLOAD, wxConfig::Get()->ReadBool("AutoUpload", false));
 	m_toolBar->EnableTool(ID_EXPORT, false);
+	m_toolBar->EnableTool(ID_UPLOAD, false);
 
 	ReplayProvider::Ptr activeReplays(new ReplayProvider(&m_replayProvider, basePath.GetFullPath(), "Active Game Replays"));
 	m_replayProvider.provider.push_back(activeReplays);
@@ -405,6 +406,7 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 	m_goalListCtrl->DeleteAllItems();
 
 	m_menubar->Enable(ID_UPLOAD, m_replayDV->GetSelectedItemsCount() > 0);
+	m_toolBar->EnableTool(ID_UPLOAD, m_replayDV->GetSelectedItemsCount() > 0);
 
 	if (m_replayDV->GetSelectedItemsCount() != 1)
 	{

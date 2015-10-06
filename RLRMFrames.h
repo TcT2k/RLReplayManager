@@ -62,6 +62,7 @@ class BaseManagerFrame : public wxFrame
 		wxToolBar* m_toolBar;
 		wxToolBarToolBase* m_newCategoryTool; 
 		wxToolBarToolBase* m_exportTool; 
+		wxToolBarToolBase* m_uploadTool; 
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnFrameClose( wxCloseEvent& event ) { event.Skip(); }

@@ -123,6 +123,8 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	
 	m_exportTool = m_toolBar->AddTool( ID_EXPORT, _("Export"), wxArtProvider::GetBitmap( wxART_FILE_SAVE_AS, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL ); 
 	
+	m_uploadTool = m_toolBar->AddTool( ID_UPLOAD, _("Upload"), wxArtProvider::GetBitmap( wxART_NORMAL_FILE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL ); 
+	
 	m_toolBar->Realize(); 
 	
 	
