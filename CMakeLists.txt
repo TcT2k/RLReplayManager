@@ -23,6 +23,8 @@ set(SRCS ${SRCS}
 	RLRMFrames.h
 	Replay.h
 	Replay.cpp
+	ReplayProvider.h
+	ReplayProvider.cpp
 	)
 	
 if(WIN32)

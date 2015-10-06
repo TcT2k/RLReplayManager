@@ -51,33 +51,60 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
 	
-	m_splitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE );
-	m_splitter->Connect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_splitterOnIdle ), NULL, this );
+	m_treeSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE );
+	m_treeSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_treeSplitterOnIdle ), NULL, this );
+	m_treeSplitter->SetMinimumPaneSize( 100 );
 	
-	m_panel1 = new wxPanel( m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	m_treePanel = new wxPanel( m_treeSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer4;
+	bSizer4 = new wxBoxSizer( wxVERTICAL );
+	
+	m_providerDV = new wxDataViewCtrl( m_treePanel, ID_PROVIDER_DV, wxDefaultPosition, wxDefaultSize, 0|wxNO_BORDER );
+	bSizer4->Add( m_providerDV, 1, wxEXPAND, 5 );
+	
+	
+	m_treePanel->SetSizer( bSizer4 );
+	m_treePanel->Layout();
+	bSizer4->Fit( m_treePanel );
+	m_replayPanel = new wxPanel( m_treeSplitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer5;
+	bSizer5 = new wxBoxSizer( wxVERTICAL );
+	
+	m_splitter = new wxSplitterWindow( m_replayPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE );
+	m_splitter->Connect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_splitterOnIdle ), NULL, this );
+	m_splitter->SetMinimumPaneSize( 100 );
+	
+	m_replayListPanel = new wxPanel( m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* bSizer2;
 	bSizer2 = new wxBoxSizer( wxVERTICAL );
 	
-	m_replayDV = new wxDataViewCtrl( m_panel1, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0|wxNO_BORDER );
+	m_replayDV = new wxDataViewCtrl( m_replayListPanel, ID_REPLAY_DV, wxDefaultPosition, wxDefaultSize, 0|wxNO_BORDER );
 	bSizer2->Add( m_replayDV, 1, wxEXPAND, 5 );
 	
 	
-	m_panel1->SetSizer( bSizer2 );
-	m_panel1->Layout();
-	bSizer2->Fit( m_panel1 );
-	m_panel2 = new wxPanel( m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	m_replayListPanel->SetSizer( bSizer2 );
+	m_replayListPanel->Layout();
+	bSizer2->Fit( m_replayListPanel );
+	m_goalPanel = new wxPanel( m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxVERTICAL );
 	
-	m_goalListCtrl = new wxListCtrl( m_panel2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxNO_BORDER );
+	m_goalListCtrl = new wxListCtrl( m_goalPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxNO_BORDER );
 	bSizer3->Add( m_goalListCtrl, 1, wxEXPAND, 5 );
 	
 	
-	m_panel2->SetSizer( bSizer3 );
-	m_panel2->Layout();
-	bSizer3->Fit( m_panel2 );
-	m_splitter->SplitVertically( m_panel1, m_panel2, 0 );
-	bSizer1->Add( m_splitter, 1, wxEXPAND, 5 );
+	m_goalPanel->SetSizer( bSizer3 );
+	m_goalPanel->Layout();
+	bSizer3->Fit( m_goalPanel );
+	m_splitter->SplitHorizontally( m_replayListPanel, m_goalPanel, 0 );
+	bSizer5->Add( m_splitter, 1, wxEXPAND, 5 );
+	
+	
+	m_replayPanel->SetSizer( bSizer5 );
+	m_replayPanel->Layout();
+	bSizer5->Fit( m_replayPanel );
+	m_treeSplitter->SplitVertically( m_treePanel, m_replayPanel, 0 );
+	bSizer1->Add( m_treeSplitter, 1, wxEXPAND, 5 );
 	
 	
 	this->SetSizer( bSizer1 );
@@ -93,7 +120,9 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	this->Connect( autoUpload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
 	this->Connect( quit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnQuitClicked ) );
 	this->Connect( about->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAboutClicked ) );
-	this->Connect( wxID_ANY, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnReplaySelectionChanged ) );
+	this->Connect( ID_PROVIDER_DV, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnProviderSelectionChanged ) );
+	m_providerDV->Connect( wxEVT_SIZE, wxSizeEventHandler( BaseManagerFrame::OnProviderSizeChanged ), NULL, this );
+	this->Connect( ID_REPLAY_DV, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnReplaySelectionChanged ) );
 	m_statusBar->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( BaseManagerFrame::OnStatusBarDoubleClicked ), NULL, this );
 }
 
@@ -106,7 +135,9 @@ BaseManagerFrame::~BaseManagerFrame()
 	this->Disconnect( ID_AUTO_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
 	this->Disconnect( wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnQuitClicked ) );
 	this->Disconnect( wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAboutClicked ) );
-	this->Disconnect( wxID_ANY, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnReplaySelectionChanged ) );
+	this->Disconnect( ID_PROVIDER_DV, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnProviderSelectionChanged ) );
+	m_providerDV->Disconnect( wxEVT_SIZE, wxSizeEventHandler( BaseManagerFrame::OnProviderSizeChanged ), NULL, this );
+	this->Disconnect( ID_REPLAY_DV, wxEVT_COMMAND_DATAVIEW_SELECTION_CHANGED, wxDataViewEventHandler( BaseManagerFrame::OnReplaySelectionChanged ) );
 	m_statusBar->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( BaseManagerFrame::OnStatusBarDoubleClicked ), NULL, this );
 	
 }

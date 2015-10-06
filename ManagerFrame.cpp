@@ -32,6 +32,13 @@ enum ReplayColumnIndex
 	RCIMax
 };
 
+enum ProviderColumnIndex
+{
+	PCIDescription,
+
+	PCIMax
+};
+
 //
 // ReplayDataModel
 //
@@ -39,9 +46,9 @@ enum ReplayColumnIndex
 class ReplayDataModel : public wxDataViewVirtualListModel
 {
 public:
-	ReplayDataModel(ManagerFrame* frame) :
-		wxDataViewVirtualListModel(frame->m_replays.size()),
-		m_frame(frame)
+	ReplayDataModel(ReplayProvider* provider) :
+		wxDataViewVirtualListModel((provider) ? provider->replay.size() : 0),
+		m_provider(provider)
 	{
 
 	}
@@ -59,7 +66,7 @@ public:
 
 	void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
 	{
-		Replay::Ptr ri = m_frame->m_replays[row];
+		Replay::Ptr ri = m_provider->replay[row];
 
 		switch (col)
 		{
@@ -97,21 +104,116 @@ public:
 		return false;
 	}
 
+	ReplayProvider* GetProvider() const
+	{
+		return m_provider;
+	}
+
 private:
-	ManagerFrame* m_frame;
+	ReplayProvider* m_provider;
 };
 
+//
+// ProviderDataModel
+//
+
+class ProviderDataModel : public wxDataViewModel
+{
+public:
+	ProviderDataModel(ReplayProvider* root):
+		m_root(root)
+	{
+
+	}
+
+	virtual unsigned int GetColumnCount() const
+	{
+		return PCIMax;
+	}
+
+	virtual wxString GetColumnType(unsigned int col) const
+	{
+		return "wxDataViewIconText";
+	}
+
+	virtual void GetValue(wxVariant &variant, const wxDataViewItem &item, unsigned int col) const
+	{
+		ReplayProvider* provider = (ReplayProvider*)item.GetID();
+
+		wxDataViewIconText iconText;
+		iconText.SetText(provider->GetDescription());
+		// TODO: scale icon size
+		iconText.SetIcon(wxArtProvider::GetIcon(wxART_FOLDER, wxART_LIST, wxSize(16, 16)));
+
+		variant << iconText;
+	}
+
+	virtual bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col)
+	{
+		return false;
+	}
+
+	virtual bool IsEnabled(const wxDataViewItem &item, unsigned int col) const
+	{
+		return true;
+	}
+
+	virtual wxDataViewItem GetParent(const wxDataViewItem &item) const
+	{
+		// the invisible root node has no parent
+		if (!item.IsOk())
+			return wxDataViewItem(0);
+
+		ReplayProvider* provider = (ReplayProvider*)item.GetID();
+
+		if (provider == m_root)
+			return wxDataViewItem(0);
+
+		return wxDataViewItem((void*)provider->GetParent());
+	}
+
+	virtual bool IsContainer(const wxDataViewItem &item) const
+	{
+		// the invisble root node can have children
+		if (!item.IsOk())
+			return true;
+
+		ReplayProvider* provider = (ReplayProvider*)item.GetID();
+		return !provider->provider.empty();
+	}
+
+	virtual unsigned int GetChildren(const wxDataViewItem &parent, wxDataViewItemArray &array) const
+	{
+		const ReplayProvider* provider = (ReplayProvider*)parent.GetID();
+		if (!provider)
+			provider = m_root;
+
+		for (auto it = provider->provider.begin(); it != provider->provider.end(); ++it)
+		{
+			ReplayProvider* childProvider = (ReplayProvider*)it->get();
+			array.Add(wxDataViewItem((void*)childProvider));
+		}
+
+		return provider->provider.size();
+	}
+
+private:
+	ReplayProvider* m_root;
+};
 
 //
 // ManagerFrame
 //
 
 ManagerFrame::ManagerFrame( wxWindow* parent ):
-	BaseManagerFrame( parent )
+	BaseManagerFrame(parent),
+	m_replayProvider(NULL)
 {
 	SetTitle(wxTheApp->GetAppDisplayName());
 
 	wxPersistentRegisterAndRestore(this);
+
+	m_providerDV->AppendIconTextColumn(_("Category"), PCIDescription, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
 
 	m_replayDV->AppendTextColumn(_("Arena"), RCIArena, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
 	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT);
@@ -131,26 +233,16 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	basePath.AppendDir("TAGame");
 	basePath.AppendDir("Demos");
 
-	wxArrayString replayFiles;
-	wxDir::GetAllFiles(basePath.GetFullPath(), &replayFiles, "*.replay", wxDIR_FILES);
-
-	if (replayFiles.empty())
+	ReplayProvider::Ptr activeReplays(new ReplayProvider(&m_replayProvider, basePath.GetFullPath(), "Active Game Replays"));
+	m_replayProvider.provider.push_back(activeReplays);
+	if (activeReplays->replay.empty())
 		wxLogError(_("No replays could be found"));
 
-	for (auto filename = replayFiles.begin(); filename != replayFiles.end(); ++filename)
-	{
-		Replay::Ptr ri(new Replay(*filename));
+	ReplayProvider::Ptr archiveRoot(new ReplayProvider(&m_replayProvider, "", "Archived Replays"));
+	m_replayProvider.provider.push_back(archiveRoot);
 
-		m_replays.push_back(ri);
-	}
-
-	wxObjectDataPtr<ReplayDataModel> model(new ReplayDataModel(this));
-	m_replayDV->UnselectAll();
-	m_replayDV->AssociateModel(model.get());
-	m_replayDV->Refresh();
-
-	m_fsWatcher.Bind(wxEVT_FSWATCHER, &ManagerFrame::OnFileSystemChange, this);
-	m_fsWatcher.Add(basePath.GetFullPath(), wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME);
+	wxObjectDataPtr<ProviderDataModel> provModel(new ProviderDataModel(&m_replayProvider));
+	m_providerDV->AssociateModel(provModel.get());
 
 	m_menubar->Check(ID_AUTO_UPLOAD, wxConfig::Get()->ReadBool("AutoUpload", false));
 }
@@ -238,7 +330,8 @@ void ManagerFrame::OnAboutClicked(wxCommandEvent& event)
 void ManagerFrame::OnExportClicked(wxCommandEvent& event)
 {
 	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
-	Replay::Ptr replay = m_replays[sel];
+	ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
+	Replay::Ptr replay = provider->replay[sel];
 
 	wxFileDialog fdlg(
 		this, 
@@ -266,7 +359,8 @@ void ManagerFrame::OnExportClicked(wxCommandEvent& event)
 void ManagerFrame::OnUploadClicked(wxCommandEvent& event)
 {
 	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
-	Replay::Ptr replay = m_replays[sel];
+	ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
+	Replay::Ptr replay = provider->replay[sel];
 
 	AddUpload(replay);
 }
@@ -278,54 +372,28 @@ void ManagerFrame::OnAutoUploadClicked(wxCommandEvent& event)
 	event.Skip();
 }
 
-void ManagerFrame::OnFileSystemChange(wxFileSystemWatcherEvent& event)
+void ManagerFrame::OnProviderSelectionChanged(wxDataViewEvent& event)
 {
-	wxLogDebug(event.ToString());
-	if (!event.GetPath().GetExt().IsSameAs("replay", false))
-		return;
+	ReplayProvider* provider = (ReplayProvider*)event.GetItem().GetID();
 
-	if (event.GetChangeType() & wxFSW_EVENT_CREATE)
+	m_goalListCtrl->DeleteAllItems();
+
+	wxObjectDataPtr<ReplayDataModel> model(new ReplayDataModel(provider));
+	m_replayDV->UnselectAll();
+	m_replayDV->AssociateModel(model.get());
+	m_replayDV->Refresh();
+}
+
+void ManagerFrame::OnProviderSizeChanged(wxSizeEvent& event)
+{
+#if defined(wxUSE_GENERICDATAVIEWCTRL)
+	// automatically resize our only column to take the entire control width
+	if (m_providerDV->GetColumnCount())
 	{
-		// Add new file
-		Replay::Ptr ri(new Replay(event.GetPath().GetFullPath()));
-		m_replays.push_back(ri);
-
-		static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowAppended();
-
-		if (wxConfig::Get()->ReadBool("AutoUpload", false))
-			AddUpload(ri);
+		wxSize size = m_providerDV->GetClientSize();
+		m_providerDV->GetColumn(0)->SetWidth(size.x);
 	}
-	else if (event.GetChangeType() & wxFSW_EVENT_DELETE)
-	{
-		// Find replay and remove it
-		size_t index = 0;
-		wxString changePath = event.GetPath().GetFullPath();
-
-		for (auto replay = m_replays.begin(); replay != m_replays.end(); ++replay, ++index)
-		{
-			if ((*replay)->GetFileName().IsSameAs(changePath, false))
-			{
-				m_replays.erase(replay);
-				static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowDeleted(index);
-				break;
-			}
-		}
-	}
-	else if (event.GetChangeType() & wxFSW_EVENT_RENAME)
-	{
-		wxString changePath = event.GetPath().GetFullPath();
-
-		// Find replay and update filename
-		for (auto replay = m_replays.begin(); replay != m_replays.end(); ++replay)
-		{
-			if ((*replay)->GetFileName().IsSameAs(changePath, false))
-			{
-				(*replay)->SetFileName(event.GetNewPath().GetFullPath());
-				break;
-			}
-		}
-	}
-
+#endif
 	event.Skip();
 }
 
@@ -344,7 +412,9 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
 	m_menubar->Enable(ID_EXPORT, true);
 
-	ReplayProperties::List goals = (*m_replays[sel])["Goals"].As<ReplayProperties::List>();
+	ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
+
+	ReplayProperties::List goals = (*provider->replay[sel])["Goals"].As<ReplayProperties::List>();
 
 	int score1 = 0;
 	int score2 = 0;
@@ -362,7 +432,7 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 
 		m_goalListCtrl->SetItem(id, 1, wxString::Format("%d:%d", score1, score2));
 		m_goalListCtrl->SetItem(id, 2, wxString::Format("%d", playerTeam + 1));
-		m_goalListCtrl->SetItem(id, 3, (*m_replays[sel]).ConvertFrames((*goal)["frame"].As<wxUint32>()).Format("%M:%S"));
+		m_goalListCtrl->SetItem(id, 3, (*provider->replay[sel]).ConvertFrames((*goal)["frame"].As<wxUint32>()).Format("%M:%S"));
 
 		itemId++;
 	}

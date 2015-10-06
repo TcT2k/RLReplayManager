@@ -10,8 +10,8 @@
 
 #include "RLRMFrames.h"
 #include "Replay.h"
+#include "ReplayProvider.h"
 
-#include <wx/fswatcher.h>
 #include <wx/thread.h>
 
 #include <queue>
@@ -28,14 +28,14 @@ protected:
 	void OnAutoUploadClicked(wxCommandEvent& event);
 	void OnAboutClicked(wxCommandEvent& event);
 	void OnReplaySelectionChanged(wxDataViewEvent& event);
-
-	void OnFileSystemChange(wxFileSystemWatcherEvent& event);
+	void OnProviderSelectionChanged(wxDataViewEvent& event);
+	void OnProviderSizeChanged(wxSizeEvent& event);
 
 	void* Entry();
 
 private:
-	wxVector<Replay::Ptr> m_replays;
-	wxFileSystemWatcher m_fsWatcher;
+	ReplayProvider m_replayProvider;
+
 	std::queue<Replay::Ptr> m_uploadQueue;
 
 	void AddUpload(Replay::Ptr replay);

@@ -33,6 +33,8 @@
 #define ID_EXPORT 1000
 #define ID_UPLOAD 1001
 #define ID_AUTO_UPLOAD 1002
+#define ID_PROVIDER_DV 1003
+#define ID_REPLAY_DV 1004
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class BaseManagerFrame
@@ -45,10 +47,14 @@ class BaseManagerFrame : public wxFrame
 		wxMenuBar* m_menubar;
 		wxMenu* file;
 		wxMenu* help;
+		wxSplitterWindow* m_treeSplitter;
+		wxPanel* m_treePanel;
+		wxDataViewCtrl* m_providerDV;
+		wxPanel* m_replayPanel;
 		wxSplitterWindow* m_splitter;
-		wxPanel* m_panel1;
+		wxPanel* m_replayListPanel;
 		wxDataViewCtrl* m_replayDV;
-		wxPanel* m_panel2;
+		wxPanel* m_goalPanel;
 		wxListCtrl* m_goalListCtrl;
 		wxStatusBar* m_statusBar;
 		
@@ -59,6 +65,8 @@ class BaseManagerFrame : public wxFrame
 		virtual void OnAutoUploadClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnQuitClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnAboutClicked( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnProviderSelectionChanged( wxDataViewEvent& event ) { event.Skip(); }
+		virtual void OnProviderSizeChanged( wxSizeEvent& event ) { event.Skip(); }
 		virtual void OnReplaySelectionChanged( wxDataViewEvent& event ) { event.Skip(); }
 		virtual void OnStatusBarDoubleClicked( wxMouseEvent& event ) { event.Skip(); }
 		
@@ -68,6 +76,12 @@ class BaseManagerFrame : public wxFrame
 		BaseManagerFrame( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 		
 		~BaseManagerFrame();
+		
+		void m_treeSplitterOnIdle( wxIdleEvent& )
+		{
+			m_treeSplitter->SetSashPosition( 0 );
+			m_treeSplitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_treeSplitterOnIdle ), NULL, this );
+		}
 		
 		void m_splitterOnIdle( wxIdleEvent& )
 		{
