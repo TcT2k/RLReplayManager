@@ -6,7 +6,7 @@ SET(CPACK_PACKAGE_VERSION_MAJOR "0")
 SET(CPACK_PACKAGE_VERSION_MINOR "1")
 SET(CPACK_PACKAGE_VERSION_PATCH "2")
 
-find_package(wxWidgets 3.0 COMPONENTS core base adv REQUIRED)
+find_package(wxWidgets 3.0 COMPONENTS core base adv net REQUIRED)
 
 include( ${wxWidgets_USE_FILE} )
 
@@ -39,10 +39,15 @@ endif()
 configure_file(VersionInfo.h.in
 	${${PROJECT_NAME}_BINARY_DIR}/VersionInfo.h)
 
-include_directories(${${PROJECT_NAME}_BINARY_DIR})
+include_directories(
+	${${PROJECT_NAME}_BINARY_DIR}
+	thirdparty/wxJSON/include
+)
+
+add_subdirectory(thirdparty/wxJSON)
 
 add_executable(RLReplayManager WIN32 MACOSX_BUNDLE ${SRCS})
-target_link_libraries(RLReplayManager ${wxWidgets_LIBRARIES})
+target_link_libraries(RLReplayManager ${wxWidgets_LIBRARIES} wxJSON)
 
 if (NOT MSVC)
 	set(CMAKE_CXX_FLAGS                "-Wall -std=c++11")

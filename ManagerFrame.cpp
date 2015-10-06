@@ -19,6 +19,12 @@
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
 #include <wx/config.h>
+#include <wx/textdlg.h>
+#include <wx/protocol/http.h>
+#include <wx/url.h>
+
+#include "wx/jsonreader.h"
+#include "wx/jsonval.h"
 
 enum ReplayColumnIndex
 {
@@ -249,10 +255,23 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	wxObjectDataPtr<ProviderDataModel> provModel(new ProviderDataModel(&m_replayProvider));
 	m_providerDV->AssociateModel(provModel.get());
 
+	wxHTTP::Initialize();
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
 {
+	wxString apiKey = wxConfig::Get()->Read("UploadKey", "");
+	if (apiKey.empty())
+	{
+		wxTextEntryDialog dlg(this, _("Please enter your rocketleaguereplays.com API key:"), _("Rocket League Replays API Key"));
+		dlg.SetTextValidator(wxFILTER_EMPTY);
+		if (dlg.ShowModal() == wxID_OK)
+		{
+			wxConfig::Get()->Write("UploadKey", dlg.GetValue());
+			wxConfig::Get()->Flush();
+		}
+	}
+
 	m_uploadQueue.push(replay);
 
 	wxLogDebug("%d entries in upload queue", m_uploadQueue.size());
@@ -288,10 +307,41 @@ void* ManagerFrame::Entry()
 
 		CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploading %s..."), replay->GetDescription()));
 
-		wxMilliSleep(500);
+		wxURI reqURI("http://www.rocketleaguereplays.com/api/replays/");
 
-		CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
-		wxMilliSleep(500);
+		wxHTTP request;
+		request.SetHeader("Authorization", wxString::Format("Token %s", wxConfig::Get()->Read("UploadKey")));
+		request.SetMethod("POST");
+
+		//Create multipart form
+		wxString Boundary = "Custom_Boundary_MMEX_WebApp";
+		wxString Text = wxEmptyString;
+		Text.Append(wxString::Format("--%s\r\n", Boundary));
+		Text.Append(wxString::Format("Content-Disposition: form-data; file=\"%s\"\r\n\r\n", "MMEX_Post"));
+		Text.Append(wxString::Format("%s\r\n", "FileData"));
+		Text.Append(wxString::Format("\r\n--%s--\r\n", Boundary));
+
+		request.SetPostText("multipart/form-data; boundary=" + Boundary, Text);
+
+		unsigned short port = wxAtoi(reqURI.GetPort());
+		if (!port)
+			port = 80;
+
+		if (request.Connect(reqURI.GetServer(), port))
+		{
+			std::auto_ptr<wxInputStream> istr(request.GetInputStream(reqURI.GetPath()));
+
+			int response = request.GetResponse();
+
+			wxJSONReader jsonReader;
+			wxJSONValue jsonVal;
+			jsonReader.Parse(*istr, &jsonVal);
+
+			CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
+			wxMilliSleep(500);
+		}
+		else
+			wxLogError("Error: %d", request.GetError());
 	}
 
 	CallAfter(&ManagerFrame::UpdateStatus, _("All uploads complete"));
