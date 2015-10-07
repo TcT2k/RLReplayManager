@@ -20,13 +20,6 @@
 #include <wx/msgdlg.h>
 #include <wx/config.h>
 #include <wx/textdlg.h>
-#include <wx/protocol/http.h>
-#include <wx/url.h>
-#include <wx/wfstream.h>
-#include <wx/sstream.h>
-
-#include "wx/jsonreader.h"
-#include "wx/jsonval.h"
 
 enum ReplayColumnIndex
 {
@@ -256,8 +249,6 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	wxObjectDataPtr<ProviderDataModel> provModel(new ProviderDataModel(&m_replayProvider));
 	m_providerDV->AssociateModel(provModel.get());
-
-	wxHTTP::Initialize();
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
@@ -274,94 +265,12 @@ void ManagerFrame::AddUpload(Replay::Ptr replay)
 		}
 	}
 
-	m_uploadQueue.push(replay);
-
-	wxLogDebug("%d entries in upload queue", m_uploadQueue.size());
-
-	if (GetThread() == NULL ||
-		!GetThread()->IsRunning())
-	{
-		if (CreateThread(wxTHREAD_JOINABLE) != wxTHREAD_NO_ERROR)
-		{
-			wxLogError("Could not create the worker thread!");
-			return;
-		}
-
-		if (GetThread()->Run() != wxTHREAD_NO_ERROR)
-		{
-			wxLogError("Could not run the worker thread!");
-			return;
-		}
-	}
+	m_transferManager.Upload(replay);
 }
 
 void ManagerFrame::UpdateStatus(const wxString& statusText)
 {
 	m_statusBar->SetStatusText(statusText);
-}
-
-void* ManagerFrame::Entry()
-{
-	while (!m_uploadQueue.empty())
-	{
-		Replay::Ptr replay = m_uploadQueue.front();
-		m_uploadQueue.pop();
-
-		CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploading %s..."), replay->GetDescription()));
-
-		wxFileName fn(replay->GetFileName());
-
-		wxURI reqURI(wxConfig::Get()->Read("UploadURL", "http://www.rocketleaguereplays.com/api/replays/"));
-
-		wxHTTP request;
-		request.SetHeader("Authorization", wxString::Format("Token %s", wxConfig::Get()->Read("UploadKey")));
-
-		//Create multipart form
-		wxString Boundary = wxString::Format("------------------------%x", wxGetLocalTime());
-		wxString Text = wxEmptyString;
-		Text.Append(wxString::Format("--%s\r\n", Boundary));
-		Text.Append(wxString::Format("Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n", 
-			fn.GetFullName()));
-
-		// Read file to stream
-		wxFileInputStream fstr(replay->GetFileName());
-		wxStringOutputStream ostr(&Text, wxConvISO8859_1);
-		fstr.Read(ostr);
-
-		Text.Append("\r\n");
-		Text.Append(wxString::Format("\r\n--%s--\r\n", Boundary));
-
-		request.SetPostText("multipart/form-data; boundary=" + Boundary, Text);
-
-		unsigned short port = wxAtoi(reqURI.GetPort());
-		if (!port)
-			port = 80;
-
-		if (request.Connect(reqURI.GetServer(), port))
-		{
-			std::auto_ptr<wxInputStream> istr(request.GetInputStream(reqURI.GetPath()));
-
-			int response = request.GetResponse();
-
-			if (istr.get())
-			{
-				wxJSONReader jsonReader;
-				wxJSONValue jsonVal;
-				jsonReader.Parse(*istr, &jsonVal);
-
-				CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
-				wxMilliSleep(500);
-			}
-			else
-				wxLogError(_("Error: Server response: %d"), response);
-		}
-		else
-			wxLogError("Error: %d", request.GetError());
-	}
-
-	CallAfter(&ManagerFrame::UpdateStatus, _("All uploads complete"));
-
-	return (void*)0;
 }
 
 void ManagerFrame::OnFrameClose(wxCloseEvent& event)

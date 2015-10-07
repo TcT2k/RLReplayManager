@@ -1,0 +1,9 @@
+[submodule "thirdparty/curlcpp"]
+	path = thirdparty/curlcpp
+	url = git@github.com:JosephP91/curlcpp.git
+[submodule "thirdparty/curl"]
+	path = thirdparty/curl
+	url = git://github.com/whoshuu/curl.git
+[submodule "thirdparty/json"]
+	path = thirdparty/json
+	url = git://github.com/nlohmann/json.git

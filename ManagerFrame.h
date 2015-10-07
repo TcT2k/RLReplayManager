@@ -11,12 +11,9 @@
 #include "RLRMFrames.h"
 #include "Replay.h"
 #include "ReplayProvider.h"
+#include "TransferManager.h"
 
-#include <wx/thread.h>
-
-#include <queue>
-
-class ManagerFrame : public BaseManagerFrame, public wxThreadHelper
+class ManagerFrame : public BaseManagerFrame
 {
 public:
 	ManagerFrame(wxWindow* parent);
@@ -36,12 +33,11 @@ protected:
 
 private:
 	ReplayProvider m_replayProvider;
-
-	std::queue<Replay::Ptr> m_uploadQueue;
-
-	void AddUpload(Replay::Ptr replay);
+	TransferManager m_transferManager;
 
 	void UpdateStatus(const wxString& statusText);
+
+	void AddUpload(Replay::Ptr replay);
 
 	friend class ReplayDataModel;
 };

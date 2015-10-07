@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 2.8)
 project(RLReplayManager)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")
-SET(CPACK_PACKAGE_VERSION_MINOR "1")
-SET(CPACK_PACKAGE_VERSION_PATCH "2")
+SET(CPACK_PACKAGE_VERSION_MINOR "2")
+SET(CPACK_PACKAGE_VERSION_PATCH "0")
 
-find_package(wxWidgets 3.0 COMPONENTS core base adv net REQUIRED)
+find_package(wxWidgets 3.0 COMPONENTS core base adv REQUIRED)
 
 include( ${wxWidgets_USE_FILE} )
 
@@ -25,6 +25,8 @@ set(SRCS ${SRCS}
 	Replay.cpp
 	ReplayProvider.h
 	ReplayProvider.cpp
+	TransferManager.h
+	TransferManager.cpp
 	)
 	
 if(WIN32)
@@ -33,21 +35,29 @@ configure_file(VersionInfo.rc.in
 	set(SRCS ${SRCS}
 		${${PROJECT_NAME}_BINARY_DIR}/VersionInfo.rc
 	)
+	
 endif()
 
 # Prepare version information
 configure_file(VersionInfo.h.in
 	${${PROJECT_NAME}_BINARY_DIR}/VersionInfo.h)
 
+add_subdirectory(thirdparty)
+include(${CURLCPP_BINARY_DIR}/curlcppConfig.cmake)
+
 include_directories(
 	${${PROJECT_NAME}_BINARY_DIR}
+	${CURL_INCLUDE_DIRS}
+	${CURLCPP_INCLUDE_DIRS}
 	thirdparty/wxJSON/include
 )
 
-add_subdirectory(thirdparty/wxJSON)
+if (WIN32)
+	add_definitions(-D_WINSOCKAPI_)
+endif()
 
 add_executable(RLReplayManager WIN32 MACOSX_BUNDLE ${SRCS})
-target_link_libraries(RLReplayManager ${wxWidgets_LIBRARIES} wxJSON)
+target_link_libraries(RLReplayManager ${wxWidgets_LIBRARIES} curlcpp wxJSON)
 
 if (NOT MSVC)
 	set(CMAKE_CXX_FLAGS                "-Wall -std=c++11")
