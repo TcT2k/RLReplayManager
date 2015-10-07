@@ -22,6 +22,8 @@
 #include <wx/textdlg.h>
 #include <wx/protocol/http.h>
 #include <wx/url.h>
+#include <wx/wfstream.h>
+#include <wx/sstream.h>
 
 #include "wx/jsonreader.h"
 #include "wx/jsonval.h"
@@ -307,18 +309,26 @@ void* ManagerFrame::Entry()
 
 		CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploading %s..."), replay->GetDescription()));
 
-		wxURI reqURI("http://www.rocketleaguereplays.com/api/replays/");
+		wxFileName fn(replay->GetFileName());
+
+		wxURI reqURI(wxConfig::Get()->Read("UploadURL", "http://www.rocketleaguereplays.com/api/replays/"));
 
 		wxHTTP request;
 		request.SetHeader("Authorization", wxString::Format("Token %s", wxConfig::Get()->Read("UploadKey")));
-		request.SetMethod("POST");
 
 		//Create multipart form
-		wxString Boundary = "Custom_Boundary_MMEX_WebApp";
+		wxString Boundary = wxString::Format("------------------------%x", wxGetLocalTime());
 		wxString Text = wxEmptyString;
 		Text.Append(wxString::Format("--%s\r\n", Boundary));
-		Text.Append(wxString::Format("Content-Disposition: form-data; file=\"%s\"\r\n\r\n", "MMEX_Post"));
-		Text.Append(wxString::Format("%s\r\n", "FileData"));
+		Text.Append(wxString::Format("Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n", 
+			fn.GetFullName()));
+
+		// Read file to stream
+		wxFileInputStream fstr(replay->GetFileName());
+		wxStringOutputStream ostr(&Text, wxConvISO8859_1);
+		fstr.Read(ostr);
+
+		Text.Append("\r\n");
 		Text.Append(wxString::Format("\r\n--%s--\r\n", Boundary));
 
 		request.SetPostText("multipart/form-data; boundary=" + Boundary, Text);
@@ -333,12 +343,17 @@ void* ManagerFrame::Entry()
 
 			int response = request.GetResponse();
 
-			wxJSONReader jsonReader;
-			wxJSONValue jsonVal;
-			jsonReader.Parse(*istr, &jsonVal);
+			if (istr.get())
+			{
+				wxJSONReader jsonReader;
+				wxJSONValue jsonVal;
+				jsonReader.Parse(*istr, &jsonVal);
 
-			CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
-			wxMilliSleep(500);
+				CallAfter(&ManagerFrame::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
+				wxMilliSleep(500);
+			}
+			else
+				wxLogError(_("Error: Server response: %d"), response);
 		}
 		else
 			wxLogError("Error: %d", request.GetError());
