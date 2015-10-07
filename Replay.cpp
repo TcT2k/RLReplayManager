@@ -208,7 +208,7 @@ void Replay::Export(const wxString& filename)
 	wxFileOutputStream ostr(filename);
 	wxZipOutputStream zipstr(ostr);
 
-	wxString replayPath = "My Games/Rocket League/TAGame/Demos";
+	wxString replayPath = "My Games/Rocket League/TAGame/Demos/";
 
 	zipstr.PutNextEntry(replayPath + GetExportBaseName() + ".replay", m_date);
 	istr.Read(zipstr);
