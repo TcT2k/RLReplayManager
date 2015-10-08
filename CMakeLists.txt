@@ -33,6 +33,7 @@ if(WIN32)
 configure_file(VersionInfo.rc.in
 	${${PROJECT_NAME}_BINARY_DIR}/VersionInfo.rc)
 	set(SRCS ${SRCS}
+		appicon.rc
 		${${PROJECT_NAME}_BINARY_DIR}/VersionInfo.rc
 	)
 	

@@ -212,6 +212,10 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 {
 	SetTitle(wxTheApp->GetAppDisplayName());
 
+#ifdef __WXMSW__
+	SetIcon(wxIcon("APPICON"));
+#endif
+
 	wxPersistentRegisterAndRestore(this);
 
 	m_providerDV->AppendIconTextColumn(_("Category"), PCIDescription, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
