@@ -300,7 +300,9 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT)->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
 	m_replayDV->AppendTextColumn(_("Score"), RCIScore, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth(), wxALIGN_CENTER)->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
 	m_replayDV->AppendTextColumn(_("Length"), RCILength, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth())->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
-	m_replayDV->AppendTextColumn(_("Date"), RCIDate, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth())->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
+	wxDataViewColumn* dateColumn = m_replayDV->AppendTextColumn(_("Date"), RCIDate, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth());
+	dateColumn->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
+	dateColumn->SetSortOrder(false);
 	m_replayDV->AppendTextColumn(_("Description"), RCIDescription);
 
 	m_goalListCtrl->AppendColumn(_("Player"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
@@ -324,11 +326,18 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	if (activeReplays->replay.empty())
 		wxLogError(_("No replays could be found"));
 
-	ReplayProvider::Ptr archiveRoot(new ReplayProvider(&m_replayProvider, "", "Archived Replays"));
+	ReplayProvider::Ptr archiveRoot(new ReplayProvider(&m_replayProvider, "", "Replay Archive"));
 	m_replayProvider.provider.push_back(archiveRoot);
 
 	wxObjectDataPtr<ProviderDataModel> provModel(new ProviderDataModel(&m_replayProvider));
 	m_providerDV->AssociateModel(provModel.get());
+
+	m_providerDV->Select(wxDataViewItem(activeReplays.get()));
+	wxDataViewEvent dvEvt;
+	dvEvt.SetItem(wxDataViewItem(activeReplays.get()));
+	OnProviderSelectionChanged(dvEvt);
+
+	m_replayDV->SetFocus();
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
@@ -440,6 +449,17 @@ void ManagerFrame::OnProviderSelectionChanged(wxDataViewEvent& event)
 	m_replayDV->UnselectAll();
 	m_replayDV->AssociateModel(model.get());
 	m_replayDV->Refresh();
+	
+	if (!provider->replay.empty())
+	{
+		wxDataViewItem item;
+		wxDataViewColumn* column;
+		m_replayDV->HitTest(wxPoint(0, 0), item, column);
+		m_replayDV->Select(item);
+		wxDataViewEvent dvEvt;
+		dvEvt.SetItem(item);
+		OnReplaySelectionChanged(dvEvt);
+	}
 }
 
 void ManagerFrame::OnProviderSizeChanged(wxSizeEvent& event)
