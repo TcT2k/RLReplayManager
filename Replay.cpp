@@ -202,6 +202,17 @@ wxString Replay::GetExportFileName()
 	return GetExportBaseName() + ".zip";
 }
 
+int Replay::GetGoalCount()
+{
+	int goals = 0;
+	if (find("Team0Score") != end())
+		goals += (*this)["Team0Score"].As<wxUint32>();
+	if (find("Team1Score") != end())
+		goals += (*this)["Team1Score"].As<wxUint32>();
+
+	return goals;
+}
+
 void Replay::Export(const wxString& filename)
 {
 	wxFileInputStream istr(m_filename);

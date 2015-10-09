@@ -45,11 +45,11 @@ enum ProviderColumnIndex
 // ReplayDataModel
 //
 
-class ReplayDataModel : public wxDataViewVirtualListModel
+class ReplayDataModel : public wxDataViewIndexListModel
 {
 public:
 	ReplayDataModel(ReplayProvider* provider) :
-		wxDataViewVirtualListModel((provider) ? provider->replay.size() : 0),
+		wxDataViewIndexListModel((provider) ? provider->replay.size() : 0),
 		m_provider(provider)
 	{
 
@@ -99,6 +99,64 @@ public:
 				break;
 			}
 		}
+	}
+
+	virtual bool HasDefaultCompare() const override
+	{
+		return false;
+	}
+
+	virtual int Compare(const wxDataViewItem &item1, const wxDataViewItem &item2,
+		unsigned int column, bool ascending) const override
+	{
+		int result = 0;
+		Replay::Ptr ri1 = m_provider->replay[(size_t)item1.GetID()-1];
+		Replay::Ptr ri2 = m_provider->replay[(size_t)item2.GetID()-1];
+
+		switch (column)
+		{
+		case RCIDescription:
+			result = ri1->GetDescription().compare(ri2->GetDescription());
+			break;
+		case RCIArena:
+			result = ri1->GetMapDisplayName().compare(ri2->GetMapDisplayName());
+			break;
+		case RCITeamSize:
+		{
+			wxUint32 size1 = (*ri1)["TeamSize"].As<wxUint32>();
+			wxUint32 size2 = (*ri2)["TeamSize"].As<wxUint32>();
+			if (size1 > size2)
+				result = 1;
+			else if (size1 < size2)
+				result = -1;
+			break;
+		}
+		case RCILength:
+			if (ri1->GetLength() > ri2->GetLength())
+				result = 1;
+			else if (ri1->GetLength() < ri2->GetLength())
+				result = -1;
+			break;
+		case RCIDate:
+			if (ri1->GetDate() > ri2->GetDate())
+				result = 1;
+			else if (ri1->GetDate() < ri2->GetDate())
+				result = -1;
+			break;
+		case RCIScore:
+		{
+			if (ri1->GetGoalCount() > ri2->GetGoalCount())
+				result = 1;
+			else if (ri1->GetGoalCount() < ri2->GetGoalCount())
+				result = -1;
+			break;
+		}
+		}
+
+		if (!ascending)
+			result = -result;
+
+		return result;
 	}
 
 	bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
@@ -238,11 +296,11 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	wxSizeEvent sizeEvt;
 	OnProviderSizeChanged(sizeEvt);
 
-	m_replayDV->AppendTextColumn(_("Arena"), RCIArena, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
-	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT);
-	m_replayDV->AppendTextColumn(_("Score"), RCIScore, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth(), wxALIGN_CENTER);
-	m_replayDV->AppendTextColumn(_("Length"), RCILength, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
-	m_replayDV->AppendTextColumn(_("Date"), RCIDate, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth());
+	m_replayDV->AppendTextColumn(_("Arena"), RCIArena, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth())->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
+	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT)->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
+	m_replayDV->AppendTextColumn(_("Score"), RCIScore, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth(), wxALIGN_CENTER)->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
+	m_replayDV->AppendTextColumn(_("Length"), RCILength, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth())->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
+	m_replayDV->AppendTextColumn(_("Date"), RCIDate, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(60, -1)).GetWidth())->SetFlags(wxCOL_DEFAULT_FLAGS | wxCOL_SORTABLE);
 	m_replayDV->AppendTextColumn(_("Description"), RCIDescription);
 
 	m_goalListCtrl->AppendColumn(_("Player"), wxLIST_FORMAT_CENTER, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());

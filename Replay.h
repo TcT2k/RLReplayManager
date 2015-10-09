@@ -59,6 +59,8 @@ public:
 
 	wxString GetExportFileName();
 
+	int GetGoalCount();
+
 	wxDateTime ConvertFrames(wxUint32 frames) const;
 
 	void Export(const wxString& filename);
