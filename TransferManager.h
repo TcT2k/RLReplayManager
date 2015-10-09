@@ -16,19 +16,23 @@
 class TransferManager: public wxThreadHelper
 {
 public:
-	TransferManager();
-
 	void Upload(Replay::Ptr replay);
 
 	virtual void* Entry();
+
+	static TransferManager& Get();
 
 protected:
 
 
 private:
+	static TransferManager* ms_transferManager;
+
 	std::queue<Replay::Ptr> m_uploadQueue;
 
 	wxString GetAPIURL(const wxString& method);
+
+	TransferManager();
 };
 
 #endif // TransferManager_H

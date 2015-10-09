@@ -8,9 +8,11 @@
 #include <wx/wxprec.h>
 
 #include "ReplayProvider.h"
+#include "TransferManager.h"
 
 #include <wx/dir.h>
 #include <wx/filename.h>
+#include <wx/config.h>
 
 wxDEFINE_EVENT(wxEVT_REPLAY_REMOVED, wxCommandEvent);
 wxDEFINE_EVENT(wxEVT_REPLAY_ADDED, wxCommandEvent);
@@ -56,6 +58,11 @@ void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 		// Add new file
 		Replay::Ptr ri(new Replay(event.GetPath().GetFullPath()));
 		replay.push_back(ri);
+
+		if (wxConfig::Get()->ReadBool("AutoUpload", false))
+		{
+			TransferManager::Get().Upload(ri);
+		}
 
 		wxCommandEvent evt(wxEVT_REPLAY_ADDED);
 		evt.SetInt(replay.size() - 1);

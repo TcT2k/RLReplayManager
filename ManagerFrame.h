@@ -36,7 +36,6 @@ protected:
 
 private:
 	ReplayProvider m_replayProvider;
-	TransferManager m_transferManager;
 
 	void UpdateStatus(const wxString& statusText);
 

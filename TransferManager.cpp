@@ -82,6 +82,20 @@ private:
 	curl_easy m_easy;
 };
 
+//
+// TransferManager
+//
+
+TransferManager* TransferManager::ms_transferManager = NULL;
+
+TransferManager& TransferManager::Get()
+{
+	if (ms_transferManager == NULL)
+		ms_transferManager = new TransferManager();
+
+	return *ms_transferManager;
+}
+
 TransferManager::TransferManager()
 {
 

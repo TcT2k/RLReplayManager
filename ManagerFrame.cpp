@@ -360,7 +360,7 @@ void ManagerFrame::AddUpload(Replay::Ptr replay)
 		}
 	}
 
-	m_transferManager.Upload(replay);
+	TransferManager::Get().Upload(replay);
 }
 
 void ManagerFrame::UpdateStatus(const wxString& statusText)
