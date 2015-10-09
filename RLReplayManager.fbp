@@ -1133,7 +1133,7 @@
                 <object class="tool" expanded="1">
                     <property name="bitmap">Load From Art Provider; wxART_NEW_DIR; wxART_TOOLBAR</property>
                     <property name="context_menu">0</property>
-                    <property name="id">wxID_ANY</property>
+                    <property name="id">ID_NEW_CATEGORY</property>
                     <property name="kind">wxITEM_NORMAL</property>
                     <property name="label">New Category</property>
                     <property name="name">m_newCategoryTool</property>

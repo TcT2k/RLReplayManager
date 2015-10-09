@@ -117,7 +117,7 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	this->Layout();
 	m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
 	m_toolBar = this->CreateToolBar( wxTB_HORIZONTAL|wxTB_HORZ_TEXT|wxTB_NODIVIDER, wxID_ANY ); 
-	m_newCategoryTool = m_toolBar->AddTool( wxID_ANY, _("New Category"), wxArtProvider::GetBitmap( wxART_NEW_DIR, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL ); 
+	m_newCategoryTool = m_toolBar->AddTool( ID_NEW_CATEGORY, _("New Category"), wxArtProvider::GetBitmap( wxART_NEW_DIR, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxEmptyString, wxEmptyString, NULL ); 
 	
 	m_toolBar->AddSeparator(); 
 	

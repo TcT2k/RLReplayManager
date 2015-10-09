@@ -338,6 +338,9 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	OnProviderSelectionChanged(dvEvt);
 
 	m_replayDV->SetFocus();
+
+	m_menubar->Enable(ID_NEW_CATEGORY, false);
+	m_toolBar->EnableTool(ID_NEW_CATEGORY, false);
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
