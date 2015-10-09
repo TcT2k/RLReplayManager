@@ -14,6 +14,7 @@
 #include <wx/dir.h>
 #include <wx/filename.h>
 #include <wx/persist.h>
+#include <wx/persist/splitter.h>
 #include <wx/persist/toplevel.h>
 #include <wx/aboutdlg.h>
 #include <wx/filedlg.h>
@@ -216,9 +217,26 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	SetIcon(wxIcon("APPICON"));
 #endif
 
+	// Initalize default size / position
+	SetMinClientSize(wxDLG_UNIT(this, wxSize(200, 100)));
+	SetClientSize(wxDLG_UNIT(this, wxSize(480, 280)));
+	m_treeSplitter->SetSashPosition(wxDLG_UNIT(this, wxSize(120, -1)).GetWidth());
+	int sashHeight = GetClientSize().GetHeight() - m_toolBar->GetSize().GetHeight() - wxDLG_UNIT(this, wxSize(-1, 80)).GetHeight();
+	m_splitter->SetSashPosition(sashHeight);
+	Center();
+
+	// Disconnect wxFormBuilder idle events
+	m_treeSplitter->Disconnect(wxEVT_IDLE, wxIdleEventHandler(BaseManagerFrame::m_treeSplitterOnIdle), NULL, this);
+	m_splitter->Disconnect(wxEVT_IDLE, wxIdleEventHandler(BaseManagerFrame::m_splitterOnIdle), NULL, this);
+
 	wxPersistentRegisterAndRestore(this);
+	wxPersistentRegisterAndRestore(m_treeSplitter);
+	wxPersistentRegisterAndRestore(m_splitter);
 
 	m_providerDV->AppendIconTextColumn(_("Category"), PCIDescription, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
+
+	wxSizeEvent sizeEvt;
+	OnProviderSizeChanged(sizeEvt);
 
 	m_replayDV->AppendTextColumn(_("Arena"), RCIArena, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
 	m_replayDV->AppendTextColumn(_("Team Size"), RCITeamSize, wxDATAVIEW_CELL_INERT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth(), wxALIGN_RIGHT);

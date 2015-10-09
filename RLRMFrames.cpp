@@ -9,7 +9,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
+BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxFrame( parent, id, title, pos, size, style, name )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	
@@ -57,7 +57,7 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer( wxVERTICAL );
 	
-	m_treeSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE );
+	m_treeSplitter = new wxSplitterWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, wxT("treeSplitter") );
 	m_treeSplitter->Connect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_treeSplitterOnIdle ), NULL, this );
 	m_treeSplitter->SetMinimumPaneSize( 100 );
 	
@@ -65,7 +65,7 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	wxBoxSizer* bSizer4;
 	bSizer4 = new wxBoxSizer( wxVERTICAL );
 	
-	m_providerDV = new wxDataViewCtrl( m_treePanel, ID_PROVIDER_DV, wxDefaultPosition, wxDefaultSize, 0|wxNO_BORDER );
+	m_providerDV = new wxDataViewCtrl( m_treePanel, ID_PROVIDER_DV, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER|wxNO_BORDER );
 	bSizer4->Add( m_providerDV, 1, wxEXPAND, 5 );
 	
 	
@@ -76,7 +76,7 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	wxBoxSizer* bSizer5;
 	bSizer5 = new wxBoxSizer( wxVERTICAL );
 	
-	m_splitter = new wxSplitterWindow( m_replayPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE );
+	m_splitter = new wxSplitterWindow( m_replayPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, wxT("contentSplitter") );
 	m_splitter->Connect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_splitterOnIdle ), NULL, this );
 	m_splitter->SetMinimumPaneSize( 100 );
 	
