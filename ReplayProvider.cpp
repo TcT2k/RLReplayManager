@@ -12,6 +12,9 @@
 #include <wx/dir.h>
 #include <wx/filename.h>
 
+wxDEFINE_EVENT(wxEVT_REPLAY_REMOVED, wxCommandEvent);
+wxDEFINE_EVENT(wxEVT_REPLAY_ADDED, wxCommandEvent);
+
 //
 // ReplayProvider
 //
@@ -53,6 +56,11 @@ void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 		// Add new file
 		Replay::Ptr ri(new Replay(event.GetPath().GetFullPath()));
 		replay.push_back(ri);
+
+		wxCommandEvent evt(wxEVT_REPLAY_ADDED);
+		evt.SetInt(replay.size() - 1);
+		evt.SetEventObject(this);
+		GetRoot()->ProcessEvent(evt);
 	}
 	else if (event.GetChangeType() & wxFSW_EVENT_DELETE)
 	{
@@ -68,6 +76,11 @@ void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 				break;
 			}
 		}
+
+		wxCommandEvent evt(wxEVT_REPLAY_REMOVED);
+		evt.SetInt(index);
+		evt.SetEventObject(this);
+		GetRoot()->ProcessEvent(evt);
 	}
 	else if (event.GetChangeType() & wxFSW_EVENT_RENAME)
 	{
@@ -85,4 +98,13 @@ void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 	}
 
 	event.Skip();
+}
+
+ReplayProvider* ReplayProvider::GetRoot() const
+{
+	ReplayProvider* provider = const_cast<ReplayProvider*>(this);
+	while (provider->GetParent() != NULL)
+		provider = provider->GetParent();
+
+	return provider;
 }

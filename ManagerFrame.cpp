@@ -341,6 +341,9 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	m_menubar->Enable(ID_NEW_CATEGORY, false);
 	m_toolBar->EnableTool(ID_NEW_CATEGORY, false);
+
+	m_replayProvider.Bind(wxEVT_REPLAY_ADDED, &ManagerFrame::OnReplayAdded, this);
+	m_replayProvider.Bind(wxEVT_REPLAY_REMOVED, &ManagerFrame::OnReplayRemoved, this);
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
@@ -525,4 +528,24 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 void ManagerFrame::OnNewCategoryClicked(wxCommandEvent& event)
 {
 
+}
+
+void ManagerFrame::OnReplayAdded(wxCommandEvent& event)
+{
+	if (event.GetEventObject() == static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider())
+	{
+		static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowAppended();
+	}
+
+	event.Skip();
+}
+
+void ManagerFrame::OnReplayRemoved(wxCommandEvent& event)
+{
+	if (event.GetEventObject() == static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider())
+	{
+		static_cast<ReplayDataModel*>(m_replayDV->GetModel())->RowDeleted(event.GetInt());
+	}
+
+	event.Skip();
 }

@@ -29,6 +29,9 @@ protected:
 	void OnProviderSizeChanged(wxSizeEvent& event);
 	void OnNewCategoryClicked(wxCommandEvent& event);
 
+	void OnReplayAdded(wxCommandEvent& event);
+	void OnReplayRemoved(wxCommandEvent& event);
+
 	void* Entry();
 
 private:

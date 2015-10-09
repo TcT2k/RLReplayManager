@@ -13,8 +13,9 @@
 #include <wx/vector.h>
 #include <wx/sharedptr.h>
 #include <wx/fswatcher.h>
+#include <wx/event.h>
 
-class ReplayProvider
+class ReplayProvider: public wxEvtHandler
 {
 public:
 	typedef wxSharedPtr<ReplayProvider> Ptr;
@@ -34,6 +35,8 @@ public:
 		return m_parent;
 	}
 
+	ReplayProvider* GetRoot() const;
+
 private:
 	ReplayProvider* m_parent;
 	wxString m_description;
@@ -44,5 +47,7 @@ private:
 	void OnFileSystemChange(wxFileSystemWatcherEvent& event);
 };
 
+wxDECLARE_EVENT(wxEVT_REPLAY_REMOVED, wxCommandEvent);
+wxDECLARE_EVENT(wxEVT_REPLAY_ADDED, wxCommandEvent);
 
 #endif // ReplayProvider_H
