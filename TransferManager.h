@@ -11,9 +11,10 @@
 #include "Replay.h"
 
 #include <wx/thread.h>
+#include <wx/event.h>
 #include <queue>
 
-class TransferManager: public wxThreadHelper
+class TransferManager : public wxEvtHandler, public wxThreadHelper
 {
 public:
 	void Upload(Replay::Ptr replay);
@@ -33,6 +34,10 @@ private:
 	wxString GetAPIURL(const wxString& method);
 
 	TransferManager();
+
+	void UpdateStatus(const wxString& message);
 };
+
+wxDECLARE_EVENT(wxEVT_TRANSFER_UPDATE, wxCommandEvent);
 
 #endif // TransferManager_H

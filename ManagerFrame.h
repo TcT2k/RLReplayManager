@@ -31,6 +31,7 @@ protected:
 
 	void OnReplayAdded(wxCommandEvent& event);
 	void OnReplayRemoved(wxCommandEvent& event);
+	void OnTransferUpdate(wxCommandEvent& event);
 
 	void* Entry();
 

@@ -270,6 +270,7 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_replayProvider(NULL)
 {
 	SetTitle(wxTheApp->GetAppDisplayName());
+	SetStatusBar(m_statusBar);
 
 #ifdef __WXMSW__
 	SetIcon(wxIcon("APPICON"));
@@ -344,6 +345,7 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 
 	m_replayProvider.Bind(wxEVT_REPLAY_ADDED, &ManagerFrame::OnReplayAdded, this);
 	m_replayProvider.Bind(wxEVT_REPLAY_REMOVED, &ManagerFrame::OnReplayRemoved, this);
+	TransferManager::Get().Bind(wxEVT_TRANSFER_UPDATE, &ManagerFrame::OnTransferUpdate, this);
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)
@@ -548,4 +550,9 @@ void ManagerFrame::OnReplayRemoved(wxCommandEvent& event)
 	}
 
 	event.Skip();
+}
+
+void ManagerFrame::OnTransferUpdate(wxCommandEvent& event)
+{
+	UpdateStatus(event.GetString());
 }

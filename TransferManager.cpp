@@ -25,6 +25,8 @@ using curl::curl_easy;
 using curl::curl_form;
 using curl::curl_header;
 
+wxDEFINE_EVENT(wxEVT_TRANSFER_UPDATE, wxCommandEvent);
+
 class WebRequest
 {
 public:
@@ -147,7 +149,13 @@ void* TransferManager::Entry()
 
 		req.GetEasy().add(curl_pair<CURLoption, curl_form>(CURLOPT_HTTPPOST, form));
 
+		CallAfter(&TransferManager::UpdateStatus, wxString::Format(_("Uploading %s..."), replay->GetDescription()));
+
 		wxJSONValue resp = req.GetResponse();
+
+		// TODO: handle response (error message, share url, etc.)
+
+		CallAfter(&TransferManager::UpdateStatus, wxString::Format(_("Uploaded %s"), replay->GetDescription()));
 	}
 
 	return (void*)0;
@@ -156,4 +164,13 @@ void* TransferManager::Entry()
 wxString TransferManager::GetAPIURL(const wxString& method)
 {
 	return wxConfig::Get()->Read("APIURL", "http://www.rocketleaguereplays.com/api/") + method;
+}
+
+void TransferManager::UpdateStatus(const wxString& message)
+{
+	wxLogDebug("Transfer update: %s", message);
+	wxCommandEvent evt(wxEVT_TRANSFER_UPDATE);
+	evt.SetString(message);
+	evt.SetEventObject(this);
+	ProcessEvent(evt);
 }
