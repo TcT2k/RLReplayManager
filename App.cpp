@@ -23,7 +23,7 @@ public:
 		m_locale.Init();
 
 		SetAppName("RLReplayManager");
-		SetAppDisplayName("RLReplayManager");
+		SetAppDisplayName("RL Replay Manager");
 
 		ManagerFrame* frame = new ManagerFrame(NULL);
 		frame->Show();
