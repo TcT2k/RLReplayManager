@@ -37,9 +37,14 @@ public:
 
 	ReplayProvider* GetRoot() const;
 
+	Replay* FindReplay(const wxString& filename) const;
+
+	bool Import(const wxString& filename, bool move = false);
+
 private:
 	ReplayProvider* m_parent;
 	wxString m_description;
+	wxString m_localPath;
 	wxFileSystemWatcher m_fsWatcher;
 
 	void FindFilesInFolder(const wxString& path);

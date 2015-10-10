@@ -21,6 +21,7 @@
 #include <wx/msgdlg.h>
 #include <wx/config.h>
 #include <wx/textdlg.h>
+#include <wx/dnd.h>
 
 enum ReplayColumnIndex
 {
@@ -262,6 +263,34 @@ private:
 };
 
 //
+// FileDropTarget
+//
+class ReplayDropTarget : public wxFileDropTarget
+{
+public:
+	ReplayDropTarget(wxDataViewCtrl* dataViewCtrl):
+		m_dataViewCtrl(dataViewCtrl)
+	{
+	}
+
+	bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString &filenames)
+	{
+		ReplayProvider* provider = static_cast<ReplayDataModel*>(m_dataViewCtrl->GetModel())->GetProvider();
+		bool filesAccepted = false;
+
+		for (auto filename = filenames.begin(); filename != filenames.end(); ++filename)
+		{
+			if (provider->Import(*filename))
+				filesAccepted = true;
+		}
+
+		return filesAccepted;
+	}
+private:
+	wxDataViewCtrl* m_dataViewCtrl;
+};
+
+//
 // ManagerFrame
 //
 
@@ -346,6 +375,8 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_replayProvider.Bind(wxEVT_REPLAY_ADDED, &ManagerFrame::OnReplayAdded, this);
 	m_replayProvider.Bind(wxEVT_REPLAY_REMOVED, &ManagerFrame::OnReplayRemoved, this);
 	TransferManager::Get().Bind(wxEVT_TRANSFER_UPDATE, &ManagerFrame::OnTransferUpdate, this);
+
+	m_replayDV->SetDropTarget(new ReplayDropTarget(m_replayDV));
 }
 
 void ManagerFrame::AddUpload(Replay::Ptr replay)

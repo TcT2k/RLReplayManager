@@ -13,6 +13,8 @@
 #include <wx/dir.h>
 #include <wx/filename.h>
 #include <wx/config.h>
+#include <wx/zipstrm.h>
+#include <wx/wfstream.h>
 
 wxDEFINE_EVENT(wxEVT_REPLAY_REMOVED, wxCommandEvent);
 wxDEFINE_EVENT(wxEVT_REPLAY_ADDED, wxCommandEvent);
@@ -31,6 +33,7 @@ ReplayProvider::ReplayProvider(ReplayProvider* parent, const wxString& path, con
 
 void ReplayProvider::FindFilesInFolder(const wxString& path)
 {
+	m_localPath = path;
 	replay.clear();
 
 	wxArrayString replayFiles;
@@ -47,6 +50,17 @@ void ReplayProvider::FindFilesInFolder(const wxString& path)
 	m_fsWatcher.Add(path, wxFSW_EVENT_CREATE | wxFSW_EVENT_DELETE | wxFSW_EVENT_RENAME);
 }
 
+Replay* ReplayProvider::FindReplay(const wxString& filename) const
+{
+	for (auto it = replay.begin(); it != replay.end(); ++it)
+	{
+		if ((*it)->GetFileName().IsSameAs(filename, false))
+			return it->get();
+	}
+
+	return NULL;
+}
+
 void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 {
 	wxLogDebug(event.ToString());
@@ -55,6 +69,10 @@ void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 
 	if (event.GetChangeType() & wxFSW_EVENT_CREATE)
 	{
+		Replay* existingReplay = FindReplay(event.GetPath().GetFullPath());
+		if (existingReplay) // Replay is already in list
+			return;
+
 		// Add new file
 		Replay::Ptr ri(new Replay(event.GetPath().GetFullPath()));
 		replay.push_back(ri);
@@ -114,4 +132,44 @@ ReplayProvider* ReplayProvider::GetRoot() const
 		provider = provider->GetParent();
 
 	return provider;
+}
+
+bool ReplayProvider::Import(const wxString& filename, bool move)
+{
+	wxFileName fn(filename);
+	if (fn.GetExt().IsSameAs("zip", false))
+	{
+		// TODO: handle zip files
+		wxFileInputStream fstr(filename);
+		wxZipInputStream zip(fstr);
+		while (wxZipEntry* zipEntry = zip.GetNextEntry())
+		{
+			wxFileName entryFN(zipEntry->GetName());
+			if (entryFN.GetExt().IsSameAs("replay", false))
+			{
+				wxFileName targetFN(m_localPath, entryFN.GetFullName());
+				wxFileOutputStream targetFile(targetFN.GetFullPath());
+				zip.Read(targetFile);
+				targetFile.Close();
+				targetFN.SetTimes(NULL, &zipEntry->GetDateTime(), &zipEntry->GetDateTime());
+
+				Replay::Ptr ri(new Replay(targetFN.GetFullPath()));
+				replay.push_back(ri);
+			}
+		}
+	}
+	else if (fn.GetExt().IsSameAs("replay", false))
+	{
+		wxFileName targetFN(m_localPath, fn.GetFullName());
+		bool copyRes = wxCopyFile(filename, targetFN.GetFullPath(), false);
+		if (copyRes)
+		{
+			Replay::Ptr ri(new Replay(targetFN.GetFullPath()));
+			replay.push_back(ri);
+		}
+
+		return copyRes;
+	}
+
+	return false;
 }
