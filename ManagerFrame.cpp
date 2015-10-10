@@ -534,7 +534,13 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 
 	ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
 
-	ReplayProperties::List goals = (*provider->replay[sel])["Goals"].As<ReplayProperties::List>();
+	Replay::Ptr replay = provider->replay[sel];
+	wxLogDebug("Displaying file: %s", replay->GetFileName());
+
+	if (replay->find("Goals") == replay->end()) // No goals nothing to display
+		return;
+
+	ReplayProperties::List goals = (*replay)["Goals"].As<ReplayProperties::List>();
 
 	int score1 = 0;
 	int score2 = 0;
