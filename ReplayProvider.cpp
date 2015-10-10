@@ -73,6 +73,9 @@ void ReplayProvider::OnFileSystemChange(wxFileSystemWatcherEvent& event)
 		if (existingReplay) // Replay is already in list
 			return;
 
+		// Give rocket league some time to write the file
+		wxMilliSleep(500);
+
 		// Add new file
 		Replay::Ptr ri(new Replay(event.GetPath().GetFullPath()));
 		replay.push_back(ri);
