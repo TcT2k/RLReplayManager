@@ -6,12 +6,16 @@ SET(CPACK_PACKAGE_VERSION_MAJOR "0")
 SET(CPACK_PACKAGE_VERSION_MINOR "2")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 
-find_package(wxWidgets 3.0 COMPONENTS core base adv REQUIRED)
+find_package(wxWidgets 3.0 COMPONENTS core base adv xml qa REQUIRED)
 
 include( ${wxWidgets_USE_FILE} )
 
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+	
+	# Enable PDB creation for release builds
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
 endif()
 
 set(SRCS ${SRCS}
