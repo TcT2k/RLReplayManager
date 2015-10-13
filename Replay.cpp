@@ -75,6 +75,27 @@ void ReplayProperties::Load(wxInputStream& istr)
 
 			(*this)[propertyName] = arrayValues;
 		}
+		else if (propertyType.IsSameAs("ByteProperty"))
+		{
+			// Description
+			wxString desc = ReadString(istr);
+			// Skip length
+			istr.SeekI(propertySize, wxFromCurrent);
+		}
+		else if (propertyType.IsSameAs("QWordProperty"))
+		{
+			wxUint64 value;
+			istr.Read(&value, sizeof(value));
+
+			(*this)[propertyName] = value;
+		}
+		else if (propertyType.IsSameAs("BoolProperty"))
+		{
+			wxByte boolVal;
+			istr.Read(&boolVal, sizeof(boolVal));
+
+			(*this)[propertyName] = (bool) boolVal;
+		}
 		else
 		{
 			wxLogError(_("Unknown property type: %s"), propertyType);
