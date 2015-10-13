@@ -57,7 +57,11 @@ class BaseManagerFrame : public wxFrame
 		wxPanel* m_replayListPanel;
 		wxDataViewCtrl* m_replayDV;
 		wxPanel* m_goalPanel;
+		wxSplitterWindow* m_splitter3;
+		wxPanel* m_panel5;
 		wxListCtrl* m_goalListCtrl;
+		wxPanel* m_panel6;
+		wxListCtrl* m_statsListCtrl;
 		wxStatusBar* m_statusBar;
 		wxToolBar* m_toolBar;
 		wxToolBarToolBase* m_newCategoryTool; 
@@ -80,7 +84,7 @@ class BaseManagerFrame : public wxFrame
 	
 	public:
 		
-		BaseManagerFrame( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL, const wxString& name = wxT("MainWindow") );
+		BaseManagerFrame( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 450,300 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL, const wxString& name = wxT("MainWindow") );
 		
 		~BaseManagerFrame();
 		
@@ -94,6 +98,12 @@ class BaseManagerFrame : public wxFrame
 		{
 			m_splitter->SetSashPosition( 0 );
 			m_splitter->Disconnect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_splitterOnIdle ), NULL, this );
+		}
+		
+		void m_splitter3OnIdle( wxIdleEvent& )
+		{
+			m_splitter3->SetSashPosition( 0 );
+			m_splitter3->Disconnect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_splitter3OnIdle ), NULL, this );
 		}
 	
 };

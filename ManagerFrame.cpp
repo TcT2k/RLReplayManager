@@ -340,6 +340,14 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_goalListCtrl->AppendColumn(_("Team"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth());
 	m_goalListCtrl->AppendColumn(_("Time"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
 
+	m_statsListCtrl->AppendColumn(_("Player"), wxLIST_FORMAT_LEFT, wxDLG_UNIT(this, wxSize(80, -1)).GetWidth());
+	m_statsListCtrl->AppendColumn(_("Score"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_statsListCtrl->AppendColumn(_("Goals"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_statsListCtrl->AppendColumn(_("Saves"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_statsListCtrl->AppendColumn(_("Assists"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_statsListCtrl->AppendColumn(_("Shots on Goal"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(28, -1)).GetWidth());
+	m_statsListCtrl->AppendColumn(_("Team"), wxLIST_FORMAT_RIGHT, wxDLG_UNIT(this, wxSize(20, -1)).GetWidth());
+
 	wxFileName basePath(wxStandardPaths::Get().GetDocumentsDir(), "");
 	basePath.AppendDir("My Games");
 	basePath.AppendDir("Rocket League");
@@ -517,6 +525,7 @@ void ManagerFrame::OnProviderSizeChanged(wxSizeEvent& event)
 void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 {
 	m_goalListCtrl->DeleteAllItems();
+	m_statsListCtrl->DeleteAllItems();
 
 	m_menubar->Enable(ID_UPLOAD, m_replayDV->GetSelectedItemsCount() > 0);
 	m_toolBar->EnableTool(ID_UPLOAD, m_replayDV->GetSelectedItemsCount() > 0);
@@ -561,6 +570,31 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 		m_goalListCtrl->SetItem(id, 3, (*provider->replay[sel]).ConvertFrames((*goal)["frame"].As<wxUint32>()).Format("%M:%S"));
 
 		itemId++;
+	}
+
+	if (replay->find("PlayerStats") != replay->end())
+	{
+		ReplayProperties::List stats = (*replay)["PlayerStats"].As<ReplayProperties::List>();
+
+		int itemId = 0;
+		for (auto stat = stats.begin(); stat != stats.end(); ++stat)
+		{
+			wxString playerName = (*stat)["Name"].As<wxString>();
+			if ((*stat)["bBot"].As<bool>())
+				playerName += " " + _("(Bot)");
+
+			int id = m_statsListCtrl->InsertItem(itemId, playerName);
+
+			m_statsListCtrl->SetItem(id, 1, wxString::Format("%d", (*stat)["Score"].As<wxUint32>()));
+			m_statsListCtrl->SetItem(id, 2, wxString::Format("%d", (*stat)["Goals"].As<wxUint32>()));
+			m_statsListCtrl->SetItem(id, 3, wxString::Format("%d", (*stat)["Saves"].As<wxUint32>()));
+			m_statsListCtrl->SetItem(id, 4, wxString::Format("%d", (*stat)["Assists"].As<wxUint32>()));
+			m_statsListCtrl->SetItem(id, 5, wxString::Format("%d", (*stat)["Shots"].As<wxUint32>()));
+			m_statsListCtrl->SetItem(id, 6, wxString::Format("%d", (*stat)["Team"].As<wxUint32>() + 1));
+
+
+			itemId++;
+		}
 	}
 }
 

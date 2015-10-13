@@ -95,8 +95,33 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxVERTICAL );
 	
-	m_goalListCtrl = new wxListCtrl( m_goalPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxNO_BORDER );
-	bSizer3->Add( m_goalListCtrl, 1, wxEXPAND, 5 );
+	m_splitter3 = new wxSplitterWindow( m_goalPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_3D|wxSP_LIVE_UPDATE, wxT("gameSplitter") );
+	m_splitter3->Connect( wxEVT_IDLE, wxIdleEventHandler( BaseManagerFrame::m_splitter3OnIdle ), NULL, this );
+	
+	m_panel5 = new wxPanel( m_splitter3, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer6;
+	bSizer6 = new wxBoxSizer( wxVERTICAL );
+	
+	m_goalListCtrl = new wxListCtrl( m_panel5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxNO_BORDER );
+	bSizer6->Add( m_goalListCtrl, 1, wxEXPAND, 5 );
+	
+	
+	m_panel5->SetSizer( bSizer6 );
+	m_panel5->Layout();
+	bSizer6->Fit( m_panel5 );
+	m_panel6 = new wxPanel( m_splitter3, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	wxBoxSizer* bSizer7;
+	bSizer7 = new wxBoxSizer( wxVERTICAL );
+	
+	m_statsListCtrl = new wxListCtrl( m_panel6, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_NO_SORT_HEADER|wxLC_REPORT|wxNO_BORDER );
+	bSizer7->Add( m_statsListCtrl, 1, wxEXPAND, 5 );
+	
+	
+	m_panel6->SetSizer( bSizer7 );
+	m_panel6->Layout();
+	bSizer7->Fit( m_panel6 );
+	m_splitter3->SplitVertically( m_panel5, m_panel6, 0 );
+	bSizer3->Add( m_splitter3, 1, wxEXPAND, 5 );
 	
 	
 	m_goalPanel->SetSizer( bSizer3 );
