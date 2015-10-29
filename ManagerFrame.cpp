@@ -497,7 +497,7 @@ void ManagerFrame::OnProviderSelectionChanged(wxDataViewEvent& event)
 	m_replayDV->AssociateModel(model.get());
 	m_replayDV->Refresh();
 	
-	if (!provider->replay.empty())
+	if (provider && !provider->replay.empty())
 	{
 		wxDataViewItem item;
 		wxDataViewColumn* column;
