@@ -178,7 +178,10 @@ void Replay::Load(const wxString& filename)
 	m_date.ParseFormat((*this)["Date"].As<wxString>(), wxS("%Y-%m-%d:%H-%M"));
 
 	m_fps = (*this)["RecordFPS"].As<wxFloat32>();
-	m_length = ConvertFrames((*this)["NumFrames"].As<wxUint32>());
+	if (find("NumFrames") != end())
+		m_length = ConvertFrames((*this)["NumFrames"].As<wxUint32>());
+	else
+		m_length = 0;
 }
 
 wxDateTime Replay::ConvertFrames(wxUint32 frames) const
@@ -250,6 +253,9 @@ void Replay::Export(const wxString& filename)
 
 wxString Replay::GetMapDisplayName()
 {
+	if (find("MapName") == end())
+		return _("Unknown");
+
 	wxString mapId = (*this)["MapName"].As<wxString>();
 
 	if (ms_mapNames.empty())
