@@ -435,7 +435,7 @@ void ManagerFrame::OnAboutClicked(wxCommandEvent& event)
 	wxAboutDialogInfo aboutInfo;
 	aboutInfo.SetName(wxTheApp->GetAppDisplayName());
 	aboutInfo.SetDescription(_("RL Replay Manager"));
-	aboutInfo.SetCopyright("(C) 2015");
+	aboutInfo.SetCopyright("(C) 2015 - 2016");
 	aboutInfo.SetWebSite("https://github.com/TcT2k/RLReplayManager");
 	aboutInfo.AddDeveloper("Tobias Taschner");
 	aboutInfo.SetVersion(APP_VERSION);
