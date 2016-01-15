@@ -147,7 +147,10 @@ void* TransferManager::Entry()
 		// Form adding
 		form.add(file_form, file_cont);
 
+		long verifyHost = 0;
 		req.GetEasy().add(curl_pair<CURLoption, curl_form>(CURLOPT_HTTPPOST, form));
+		req.GetEasy().add(curl_pair<CURLoption, long>(CURLOPT_SSL_VERIFYPEER, verifyHost));
+		
 
 		CallAfter(&TransferManager::UpdateStatus, wxString::Format(_("Uploading %s..."), replay->GetDescription()));
 
@@ -163,7 +166,7 @@ void* TransferManager::Entry()
 
 wxString TransferManager::GetAPIURL(const wxString& method)
 {
-	return wxConfig::Get()->Read("APIURL", "http://www.rocketleaguereplays.com/api/") + method;
+	return wxConfig::Get()->Read("APIURL", "https://www.rocketleaguereplays.com/api/") + method;
 }
 
 void TransferManager::UpdateStatus(const wxString& message)
