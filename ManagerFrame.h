@@ -22,6 +22,7 @@ protected:
 	void OnQuitClicked(wxCommandEvent& event);
 	void OnExportClicked(wxCommandEvent& event);
 	void OnUploadClicked(wxCommandEvent& event);
+	void OnDeleteClicked(wxCommandEvent& event);
 	void OnAutoUploadClicked(wxCommandEvent& event);
 	void OnAboutClicked(wxCommandEvent& event);
 	void OnReplaySelectionChanged(wxDataViewEvent& event);

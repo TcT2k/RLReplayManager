@@ -73,6 +73,7 @@ class BaseManagerFrame : public wxFrame
 		virtual void OnNewCategoryClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnExportClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnUploadClicked( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnDeleteClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnAutoUploadClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnQuitClicked( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnAboutClicked( wxCommandEvent& event ) { event.Skip(); }

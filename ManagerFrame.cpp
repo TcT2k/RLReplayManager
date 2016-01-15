@@ -358,6 +358,7 @@ ManagerFrame::ManagerFrame( wxWindow* parent ):
 	m_menubar->Check(ID_AUTO_UPLOAD, wxConfig::Get()->ReadBool("AutoUpload", false));
 	m_toolBar->EnableTool(ID_EXPORT, false);
 	m_toolBar->EnableTool(ID_UPLOAD, false);
+	m_toolBar->EnableTool(wxID_DELETE, false);
 
 	ReplayProvider::Ptr activeReplays(new ReplayProvider(&m_replayProvider, basePath.GetFullPath(), "Active Game Replays"));
 	m_replayProvider.provider.push_back(activeReplays);
@@ -479,6 +480,19 @@ void ManagerFrame::OnUploadClicked(wxCommandEvent& event)
 	AddUpload(replay);
 }
 
+void ManagerFrame::OnDeleteClicked(wxCommandEvent& event)
+{
+	if (wxMessageBox(_("Are you sure you want to delete this replay?\n\nDeleted replays might be restored from steam cloud if the game is not running."),
+		_("Warning"), wxICON_WARNING | wxYES_NO | wxNO_DEFAULT | wxCENTER, this) == wxYES)
+	{
+		size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
+		ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
+		Replay::Ptr replay = provider->replay[sel];
+
+		wxRemoveFile(replay->GetFileName());
+	}
+}
+
 void ManagerFrame::OnAutoUploadClicked(wxCommandEvent& event)
 {
 	wxConfig::Get()->Write("AutoUpload", m_menubar->IsChecked(ID_AUTO_UPLOAD));
@@ -533,6 +547,7 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 	if (m_replayDV->GetSelectedItemsCount() != 1)
 	{
 		m_menubar->Enable(ID_EXPORT, false);
+		m_menubar->Enable(wxID_DELETE, false);
 		m_toolBar->EnableTool(ID_EXPORT, false);
 		return;
 	}
@@ -540,6 +555,7 @@ void ManagerFrame::OnReplaySelectionChanged(wxDataViewEvent& event)
 	size_t sel = (size_t)m_replayDV->GetSelection().GetID() - 1;
 	m_menubar->Enable(ID_EXPORT, true);
 	m_toolBar->EnableTool(ID_EXPORT, true);
+	m_menubar->Enable(wxID_DELETE, true);
 
 	ReplayProvider* provider = static_cast<ReplayDataModel*>(m_replayDV->GetModel())->GetProvider();
 

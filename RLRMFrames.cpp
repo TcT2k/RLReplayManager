@@ -31,6 +31,10 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	file->Append( upload );
 	upload->Enable( false );
 	
+	wxMenuItem* deleteItem;
+	deleteItem = new wxMenuItem( file, wxID_DELETE, wxString( _("&Delete") ) + wxT('\t') + wxT("Del"), wxEmptyString, wxITEM_NORMAL );
+	file->Append( deleteItem );
+	
 	file->AppendSeparator();
 	
 	wxMenuItem* autoUpload;
@@ -160,6 +164,7 @@ BaseManagerFrame::BaseManagerFrame( wxWindow* parent, wxWindowID id, const wxStr
 	this->Connect( newCategory->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnNewCategoryClicked ) );
 	this->Connect( exportItem->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnExportClicked ) );
 	this->Connect( upload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnUploadClicked ) );
+	this->Connect( deleteItem->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnDeleteClicked ) );
 	this->Connect( autoUpload->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
 	this->Connect( quit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnQuitClicked ) );
 	this->Connect( about->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAboutClicked ) );
@@ -176,6 +181,7 @@ BaseManagerFrame::~BaseManagerFrame()
 	this->Disconnect( ID_NEW_CATEGORY, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnNewCategoryClicked ) );
 	this->Disconnect( ID_EXPORT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnExportClicked ) );
 	this->Disconnect( ID_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnUploadClicked ) );
+	this->Disconnect( wxID_DELETE, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnDeleteClicked ) );
 	this->Disconnect( ID_AUTO_UPLOAD, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAutoUploadClicked ) );
 	this->Disconnect( wxID_EXIT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnQuitClicked ) );
 	this->Disconnect( wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( BaseManagerFrame::OnAboutClicked ) );
